@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.pyc
+data/
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+
+# Unused generation drafts; final sheets are listed in assets/manifest.json.
+assets/characters/noah.png
+assets/characters/elena.png
+assets/sources/*-draft.png
