@@ -1,4 +1,4 @@
-Generative Agent Town — Implementation Plan
+# Smallworld Agents — Implementation Plan
 
 Prepared 2026-09-06. Status: the first playable 2.5D isometric application is implemented, with original assets, five residents and a player, walking, proximity conversations, personal memories, daily routines, physical tasks, and SQLite save/resume. Run `python run.py` and open http://127.0.0.1:8766/. See README.md for configuration and current limits. The separate asset-preview.html remains an art inspection harness.
 

@@ -152,7 +152,7 @@ def run(port=8766, database=None):
 
     ticker = threading.Thread(target=clock, name="world-clock", daemon=True)
     ticker.start()
-    print(f"Neighborhood is running at http://127.0.0.1:{port}", flush=True)
+    print(f"Smallworld Agents is running at http://127.0.0.1:{port}", flush=True)
     print("Mode: " + world.cognition.mode + ". Press Ctrl+C to save and stop.", flush=True)
     try:
         server.serve_forever(poll_interval=.25)

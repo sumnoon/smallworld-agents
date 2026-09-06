@@ -667,7 +667,7 @@ class World:
                         task["retry_at"] = self.time
             elif kind == "save":
                 self.save()
-                result["message"] = "Neighborhood saved"
+                result["message"] = "Smallworld Agents: town saved"
             else:
                 raise CommandError("Unknown command")
             self.storage.remember_command(cid, result)

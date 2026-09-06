@@ -1,6 +1,6 @@
 <div align="center">
 
-# Neighborhood
+# Smallworld Agents
 
 **A small town where every resident has a routine, a memory, and somewhere to be.**
 
@@ -16,7 +16,7 @@ A playable **2.5D isometric simulation** with original artwork, autonomous resid
 
 Walk into the neighborhood as **Alex**. Meet Maya at the cafe, chat with Samir, or ask someone to bring coffee to Elena. Residents move through the world, remember their own experiences, and carry out requests that you can follow step by step.
 
-Inspired by [Generative Agents: Interactive Simulacra of Human Behavior](https://arxiv.org/abs/2304.03442), Neighborhood is a first playable adaptation of its ideas. It combines a language-model layer with a simulation that checks what actually happens.
+Inspired by [Generative Agents: Interactive Simulacra of Human Behavior](https://arxiv.org/abs/2304.03442), Smallworld Agents is a first playable adaptation of its ideas. It combines a language-model layer with a simulation that checks what actually happens.
 
 ## What you can do
 
@@ -38,8 +38,8 @@ Inspired by [Generative Agents: Interactive Simulacra of Human Behavior](https:/
 **Requirements:** Python 3.11+ and a modern browser. No third-party Python packages or frontend build are required. Node.js is only needed for developer checks and rebuilding asset metadata.
 
 ```sh
-git clone https://github.com/sumnoon/neighborhood-agent-town.git
-cd neighborhood-agent-town
+git clone https://github.com/sumnoon/smallworld-agents.git
+cd smallworld-agents
 python run.py
 ```
 
