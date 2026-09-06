@@ -33,6 +33,7 @@ jobs:
           node --check client/app.js
           node --check client/renderer.js
           node --check asset-preview.js
+          node --check tools/video/render_intro.mjs
       - name: Verify generated asset metadata
         run: |
           node tools/inspect-assets.mjs

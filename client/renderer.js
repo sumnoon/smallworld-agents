@@ -1,5 +1,5 @@
 'use strict';
-class NeighborhoodRenderer {
+class SmallworldRenderer {
   constructor(canvas,portrait,layout,manifest,onSelect,onMove){
     this.canvas=canvas;this.ctx=canvas.getContext('2d');this.portrait=portrait;this.pc=portrait.getContext('2d');this.layout=layout;this.manifest=manifest;this.onSelect=onSelect;this.onMove=onMove;this.images={};this.selected='maya';this.state=null;this.display={};this.zoom=1;this.pan={x:0,y:0};this.clock=0;this.last=0;this.bubbles=true;this.drag=null;this.ready=false;
     new ResizeObserver(()=>this.resize()).observe(canvas);
@@ -32,4 +32,4 @@ class NeighborhoodRenderer {
   }
   frame(ms){const dt=Math.min((ms-this.last)/1000,.05);this.last=ms;if(this.state){if(!this.state.paused)this.clock+=dt;for(const a of this.state.agents){const d=this.display[a.id],alpha=1-Math.exp(-dt*15);if(Math.hypot(d.x-a.x,d.y-a.y)>3){d.x=a.x;d.y=a.y;}else{d.x+=(a.x-d.x)*alpha;d.y+=(a.y-d.y)*alpha;}}this.draw();}requestAnimationFrame(t=>this.frame(t));}
 }
-window.NeighborhoodRenderer=NeighborhoodRenderer;
+window.SmallworldRenderer=SmallworldRenderer;

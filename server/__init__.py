@@ -1,1 +1,1 @@
-"""Neighborhood simulation server."""
+"""Smallworld Agents simulation server."""

@@ -1,4 +1,4 @@
-Original isometric visual assets
+# Smallworld Agents — Original Isometric Assets
 
 These assets were created specifically for this project's first neighborhood: a cafe, a shop, two homes, a park, five residents, and a player. Raster illustrations were generated with the built-in image generation tool; interface icons were authored as SVG. No stock asset pack is used.
 

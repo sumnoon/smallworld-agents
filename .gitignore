@@ -14,3 +14,7 @@ Thumbs.db
 assets/characters/noah.png
 assets/characters/elena.png
 assets/sources/*-draft.png
+
+.video-tools/
+
+.video-build/
