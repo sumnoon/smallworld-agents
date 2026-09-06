@@ -6,13 +6,13 @@
 
 A playable **2.5D isometric simulation** with original artwork, autonomous residents, and local language-model cognition through **Ollama**.
 
-[Quick start](#quick-start) · [Local AI](#bring-the-town-to-life-with-ollama) · [How it works](#how-it-works) · [Roadmap](#roadmap)
-
-<img src="assets/isometric/buildings.png" width="560" alt="Original isometric artwork: a neighborhood cafe, general store, and two homes">
-
-*Original building artwork used in the town.*
-
 </div>
+
+https://github.com/user-attachments/assets/10f2cffd-3cfd-480f-9d2e-4243ba109661
+
+*Watch the one-minute introduction — narrated, captioned, and filmed from a guided offline simulation.* [Read the transcript](docs/media/intro-transcript.md) · [Download the MP4](docs/media/smallworld-agents-intro.mp4) · [Video production notes](tools/video/README.md)
+
+[Quick start](#quick-start) · [Local AI](#bring-the-town-to-life-with-ollama) · [How it works](#how-it-works) · [Roadmap](#roadmap)
 
 Walk into the neighborhood as **Alex**. Meet Maya at the cafe, chat with Samir, or ask someone to bring coffee to Elena. Residents move through the world, remember their own experiences, and carry out requests that you can follow step by step.
 

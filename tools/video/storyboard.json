@@ -1,0 +1,82 @@
+[
+  {
+    "id": "welcome",
+    "eyebrow": "A LITTLE TOWN. LIVES OF ITS OWN.",
+    "title": [
+      "Meet",
+      "Smallworld",
+      "Agents."
+    ],
+    "body": "An isometric world of people,\nplaces, and everyday stories.",
+    "voice": "Meet Smallworld Agents. A little town with lives of its own.",
+    "min_seconds": 5.5
+  },
+  {
+    "id": "residents",
+    "eyebrow": "01 / EXPLORE",
+    "title": [
+      "Five residents.",
+      "One shared",
+      "neighborhood."
+    ],
+    "body": "Walk as Alex. Meet the neighbors.\nSee where their routines take them.",
+    "voice": "Explore as Alex. Meet five residents as they walk, follow routines, and spend time together.",
+    "min_seconds": 6.5
+  },
+  {
+    "id": "conversation",
+    "eyebrow": "02 / CONNECT",
+    "title": [
+      "Walk over.",
+      "Say hello."
+    ],
+    "body": "Conversations happen up close,\nand become part of a resident’s history.",
+    "voice": "Walk over and say hello. Conversations happen up close, and become part of each resident’s history.",
+    "min_seconds": 7
+  },
+  {
+    "id": "delivery",
+    "eyebrow": "03 / GIVE A TASK",
+    "title": [
+      "A request.",
+      "A real journey."
+    ],
+    "body": "“Bring a coffee to Elena.”\nFollow the errand from pickup to handoff.",
+    "voice": "Ask Samir to bring coffee to Elena. He visits the cafe, collects a cup, finds Elena, and hands it over.",
+    "min_seconds": 11
+  },
+  {
+    "id": "memory",
+    "eyebrow": "04 / LOOK CLOSER",
+    "title": [
+      "Experiences",
+      "become",
+      "memories."
+    ],
+    "body": "Inspect observations, conversations,\nreflections, and relationships.",
+    "voice": "Look closer. Each resident keeps personal memories of observations, conversations, and reflections.",
+    "min_seconds": 7
+  },
+  {
+    "id": "ollama",
+    "eyebrow": "05 / LOCAL INTELLIGENCE",
+    "title": [
+      "Your town.",
+      "Your local AI."
+    ],
+    "body": "Ollama · gemma4:31b\nDialogue, decisions, and task interpretation.",
+    "voice": "Connect Ollama for local language model conversations and decisions. The simulation checks every action. An offline demo works without a model.",
+    "min_seconds": 8.5
+  },
+  {
+    "id": "start",
+    "eyebrow": "START SOMETHING SMALL",
+    "title": [
+      "Smallworld",
+      "Agents."
+    ],
+    "body": "Explore the project on GitHub.\ngithub.com/sumnoon/smallworld-agents",
+    "voice": "Explore the project on GitHub. Welcome to Smallworld Agents.",
+    "min_seconds": 5.5
+  }
+]
