@@ -28,6 +28,29 @@ class ModelError(Exception):
     pass
 
 
+def extract_json(content):
+    """Unwrap a JSON object from model text.
+
+    Ollama enforces `format` with constrained decoding only for locally executed
+    models. Cloud-hosted models (a `-cloud` name proxied through ollama.com)
+    treat the schema as a hint, so they may wrap the object in a markdown fence
+    or add surrounding prose.
+    """
+    text = content.strip()
+    fence = re.search(r"```(?:json)?\s*(.*?)\s*```", text, re.DOTALL)
+    if fence:
+        text = fence.group(1).strip()
+    if not text.startswith("{"):
+        start, end = text.find("{"), text.rfind("}")
+        if start < 0 or end < start:
+            raise ModelError("Model returned text that was not JSON")
+        text = text[start:end + 1]
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        raise ModelError("Model returned text that was not JSON") from None
+
+
 class Cognition:
     def __init__(self, mode=None):
         self.mode = mode or os.getenv("AGENT_PROVIDER", "demo")
@@ -109,7 +132,7 @@ class Cognition:
                 if not pieces:
                     raise ModelError("Model returned no usable answer")
                 content = "".join(pieces)
-            value = json.loads(content)
+            value = extract_json(content)
             if not isinstance(value, dict) or set(value) != set(schema["properties"]):
                 raise ModelError("Model returned invalid fields")
             for key, rule in schema["properties"].items():
