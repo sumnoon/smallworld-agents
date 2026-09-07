@@ -81,6 +81,8 @@ AGENT_MAX_REQUESTS=1000
 
 Keep Ollama running and restart `python run.py`. The interface displays **OLLAMA LIVE** and the model name. No cloud API key is needed, and the default Ollama endpoint is on your computer.
 
+**Using an Ollama cloud model?** A `-cloud` name such as `gemma4:31b-cloud` still goes through your local Ollama endpoint, which proxies it to `ollama.com`, so run `ollama signin` once and confirm the name appears in `ollama list`. Set `AGENT_MODEL` to the exact `-cloud` name. Cloud-hosted models apply the JSON schema as a prompt hint rather than as constrained decoding, so their answers may arrive wrapped in a markdown fence; the adapter unwraps them before validating the fields.
+
 **Using a custom model folder on Windows?** Start Ollama in a separate terminal with:
 
 ```powershell

@@ -300,6 +300,29 @@ class OllamaTests(unittest.TestCase):
         self.assertEqual(provider.calls, 1)
         self.assertNotIn('private detail', provider.last_error)
 
+    def test_unconstrained_cloud_model_answer_is_unwrapped(self):
+        # Cloud-hosted models treat `format` as a hint, so they may fence the object or add prose.
+        import io as _io
+        answer = {'kind': 'deliver', 'recipient': 'elena', 'place': 'cafe', 'item': 'coffee', 'minutes': 0, 'reply': 'On my way.'}
+        body = json.dumps(answer)
+        for content in ['```json\n' + body + '\n```', '```\n' + body + '\n```', 'Here you go:\n' + body, body]:
+            with self.subTest(content=content[:12]):
+                provider = self.provider()
+                raw = _io.BytesIO(json.dumps({'done': True, 'done_reason': 'stop', 'message': {'content': content},
+                                              'prompt_eval_count': 120, 'eval_count': 18}).encode())
+                with patch('urllib.request.urlopen', return_value=raw):
+                    self.assertEqual(provider.task({}), answer)
+                self.assertEqual(provider.failures, 0)
+
+    def test_answer_without_any_json_object_is_rejected(self):
+        provider = self.provider()
+        import io as _io
+        raw = _io.BytesIO(json.dumps({'done': True, 'done_reason': 'stop', 'message': {'content': 'I cannot help with that.'},
+                                      'prompt_eval_count': 1, 'eval_count': 1}).encode())
+        with patch('urllib.request.urlopen', return_value=raw):
+            with self.assertRaisesRegex(ModelError, 'not JSON'): provider.chat({})
+        self.assertEqual(provider.failures, 1)
+
     def test_invalid_reflection_references_are_rejected(self):
         provider = self.provider()
         with patch('urllib.request.urlopen', return_value=self.response({'insight': 'A thought', 'memory_ids': ['4']})):
