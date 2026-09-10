@@ -1,0 +1,21 @@
+{
+  "population": 5,
+  "provider": "demo",
+  "retrieval": true,
+  "reflections": false,
+  "ticks": 1200,
+  "delivery_and_report": {
+    "status": "completed",
+    "steps_completed": 2,
+    "transfer_count": 1
+  },
+  "collision_ticks": 0,
+  "unique_inventory": true,
+  "stock_nonnegative": true,
+  "replay_frames_verified": 628,
+  "tick_ms_median": 0.966,
+  "tick_ms_p95": 2.135,
+  "wall_seconds": 1.55,
+  "events": 224,
+  "human_believability": "not evaluated"
+}

@@ -155,6 +155,7 @@ class WorldTests(unittest.TestCase):
         self.assertEqual(len(self.world.tasks), 1)
 
     def test_conversation_history_survives_busy_world_events(self):
+        self.world.agents["visitor"].update(x=6., y=7.)
         self.world.speak("visitor", "My favorite color is blue.", ["maya"])
         for i in range(60):
             self.world.event("system", "activity", "Other activity " + str(i))
@@ -359,6 +360,22 @@ class HTTPTests(unittest.TestCase):
                 urllib.request.urlopen(self.base + path)
             self.assertEqual(caught.exception.code, 404)
             caught.exception.close()
+
+    def test_replay_and_scenario_validation_endpoints(self):
+        with urllib.request.urlopen(self.base+"/api/replay") as response:
+            frames = json.load(response)
+        with urllib.request.urlopen(self.base+"/api/replay/"+str(frames[0]["id"])) as response:
+            self.assertEqual(len(json.load(response)["agents"]),6)
+        request = urllib.request.Request(self.base+"/api/scenario/validate",json.dumps({"layout":self.world.layout,"residents":25}).encode(),{"Content-Type":"application/json"})
+        with urllib.request.urlopen(request) as response:
+            self.assertEqual(len(json.load(response)["layout"]["residents"]),26)
+        self.assertEqual(len(self.world.agents),6)
+        broken = {"layout":{"size":16,"places":{},"residents":[]}}
+        request = urllib.request.Request(self.base+"/api/scenario/validate",json.dumps(broken).encode(),{"Content-Type":"application/json"})
+        with self.assertRaises(urllib.error.HTTPError) as caught:
+            urllib.request.urlopen(request)
+        self.assertEqual(caught.exception.code,400)
+        caught.exception.close()
 
     def test_cross_origin_command_is_rejected(self):
         request = urllib.request.Request(self.base + "/api/command", b'{"id":"p","kind":"pause","paused":true}', {"Origin": "https://example.com", "Content-Type": "application/json"})

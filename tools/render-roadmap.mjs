@@ -1,0 +1,21 @@
+// Render the actual Canvas implementation using native Canvas, without a browser.
+import fs from 'node:fs';
+import path from 'node:path';
+import vm from 'node:vm';
+import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url);
+const {createCanvas,loadImage}=require(process.env.VIDEO_CANVAS_MODULE||'@napi-rs/canvas');
+const root=path.resolve(import.meta.dirname,'..');
+const snapshot=JSON.parse(fs.readFileSync(path.join(root,'.video-build/roadmap-state.json'),'utf8'));
+const layout=snapshot.layout,manifest=JSON.parse(fs.readFileSync(path.join(root,'assets/manifest.json'),'utf8'));
+const context={window:{},ResizeObserver:class{observe(){}},devicePixelRatio:1,requestAnimationFrame(){}};
+vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(root,'client/renderer.js'),'utf8'),context);
+const canvas=createCanvas(1000,650),portrait=createCanvas(130,150);
+canvas.getBoundingClientRect=()=>({width:1000,height:650});canvas.addEventListener=()=>{};
+const renderer=new context.window.SmallworldRenderer(canvas,portrait,layout,manifest,()=>{},()=>{});
+for(const [id,s]of Object.entries(manifest.sheets))renderer.images[id]=await loadImage(path.join(root,'assets',s.file));
+renderer.resize();renderer.fit();renderer.setState(snapshot);renderer.view='';renderer.bubbles=false;renderer.draw();
+fs.writeFileSync(path.join(root,'.video-build/roadmap-outdoor.png'),canvas.toBuffer('image/png'));
+renderer.view='home';renderer.zoom=1.6;renderer.selected='maya';renderer.draw();
+fs.writeFileSync(path.join(root,'.video-build/roadmap-interior.png'),canvas.toBuffer('image/png'));
+console.log('Rendered outdoor and interior scenes using the application renderer.');

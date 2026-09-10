@@ -12,10 +12,12 @@ from .model import Cognition, ModelError
 from .storage import Storage
 
 ROOT = Path(__file__).resolve().parents[1]
-TERMINAL = {"completed", "failed", "cancelled"}
+TERMINAL = {"completed", "failed", "cancelled", "declined"}
 
 
 def distance(a, b):
+    if a.get("room", "") != b.get("room", ""):
+        return math.inf
     return math.hypot(a["x"] - b["x"], a["y"] - b["y"])
 
 
@@ -23,9 +25,9 @@ class CommandError(ValueError):
     pass
 
 
-class World:
+class BaseWorld:
     def __init__(self, database=":memory:", cognition=None, restore=True):
-        self.layout = json.loads((ROOT / "scenarios/neighborhood.json").read_text())
+        self.layout = self.initial_layout()
         self.storage = Storage(database)
         self.cognition = cognition or Cognition()
         self.fallback = Cognition("demo")
@@ -57,6 +59,8 @@ class World:
                 "routine": None, "retrieved": []}
         saved = self.storage.load() if restore else None
         if saved:
+            self.layout = saved.get("layout",self.layout)
+            self.blocked = {(x,y) for b in self.layout["buildings"] for x in range(b["x"]-2,b["x"]+2) for y in range(b["y"]-2,b["y"]+2)} | {(p["x"],p["y"]) for p in self.layout["props"]}
             self.time = saved["time"]
             self.agents = saved["agents"]
             self.tasks = saved["tasks"]
@@ -89,7 +93,7 @@ class World:
         end = round(goal["x"]), round(goal["y"])
         if not self.valid(*end, extra):
             return None
-        others = [b for b in self.agents.values() if b is not actor]
+        others = [b for b in self.agents.values() if b is not actor and b.get("room", "") == actor.get("room", "")]
         extra = set(extra) | {(round(b["x"]), round(b["y"])) for b in others
                               if (round(b["x"]), round(b["y"])) != end}
         # Replanning can happen between tiles, on the near side of a resident.
@@ -102,7 +106,7 @@ class World:
             previous = round(actor["x"]), round(actor["y"])
             for i in range(1, steps + 1):
                 point = {"x": actor["x"] + (cell[0] - actor["x"]) * i / steps,
-                         "y": actor["y"] + (cell[1] - actor["y"]) * i / steps}
+                         "y": actor["y"] + (cell[1] - actor["y"]) * i / steps, "room":actor.get("room", "")}
                 current = round(point["x"]), round(point["y"])
                 if not self.valid(*current) or any(distance(point, b) < .42 for b in others):
                     return False
@@ -167,7 +171,7 @@ class World:
                 if a is b or not self.visible(a, b):
                     continue
                 first = b["id"] not in a["known_positions"]
-                a["known_positions"][b["id"]] = {"x": b["x"], "y": b["y"], "time": self.time}
+                a["known_positions"][b["id"]] = {"x": b["x"], "y": b["y"], "time": self.time, "room":b.get("room", "")}
                 if first and a["id"] != "visitor":
                     seq = self.event(a["id"], "observation", f"{a['name']} noticed {b['name']} nearby.")
                     self.storage.memory(a["id"], "observation", f"I saw {b['name']} in the neighborhood.", self.time, 3, [seq])
@@ -200,7 +204,7 @@ class World:
                         conv["waiting"] = False
                         conv["next_turn"] = self.time + 30
         a["thinking"] = True
-        self.jobs.append({"future": self.pool.submit(getattr(self.cognition, method), context), "method": method,
+        self.jobs.append({"future": self.pool.submit(self._cognition_job, method, context), "method": method,
                           "agent": a["id"], "revision": a["revision"], "context": context, **extra})
 
     def _jobs(self):
@@ -216,10 +220,11 @@ class World:
                 continue
             a["thinking"] = False
             try:
-                result = job["future"].result()
+                result = self.consume_result(job, job["future"].result())
             except Exception:
                 self.event(a["id"], "model_fallback", f"{a['name']} is using a demo fallback because the model could not respond.")
                 result = getattr(self.fallback, job["method"])(job["context"])
+                self.storage.decision(self.time,a["id"],job["method"],{"mode":"demo_fallback","result":result})
             try:
                 if job["method"] == "task":
                     self.create_task(a["id"], job["context"]["request"], result)
@@ -229,6 +234,7 @@ class World:
                         message = job["context"].get("message", "")
                         spec = self.fallback.task({**job["context"], "request": message})
                         if spec["kind"] != "unsupported":
+                            self.propose(a["id"],message)
                             result = "That was sent as chat, so I haven't started a new task. Select Assign task and send that request to put it in my task list."
                     self.speak(a["id"], str(result)[:360], [other])
                     if job.get("conversation") in self.conversations:
@@ -249,13 +255,18 @@ class World:
                     a["routine"] = {"place": place, "activity": str(result["activity"])[:100], "duration": minutes * 60, "arrived": None}
                     a["next_decision"] = self.time + 60
                 elif job["method"] == "reflect":
-                    allowed = {m["id"] for m in job["context"]["memories"]}
+                    allowed = {m["id"] for m in job["context"]["memories"] if m["kind"] != "reflection"}
                     refs = [n for n in result.get("memory_ids", []) if type(n) is int and n in allowed]
                     if refs and result.get("insight"):
+                        a["last_reflection"] = self.time
                         self.storage.memory(a["id"], "reflection", str(result["insight"])[:500], self.time, 7,
                                             [{"memory_id": n} for n in refs])
                         self.event(a["id"], "reflection", f"{a['name']} reflected on recent experiences.")
             except (ValueError, TypeError, KeyError) as exc:
+                if job["method"] == "task":
+                    tid = "task_"+uuid.uuid4().hex[:10]
+                    self.tasks[tid] = {"id":tid,"agent":a["id"],"request":job["context"]["request"],"kind":"unsupported","status":"declined","steps":[],"step":0,"evidence":[],"blocker":str(exc),"created":self.time}
+                    self.event(a["id"],"task_declined",str(exc),{"task":tid})
                 self.speak(a["id"], str(exc)[:180], ["visitor"])
                 a["next_decision"] = self.time + 30
         self.jobs = pending
@@ -347,7 +358,7 @@ class World:
             a["path"] = []
             return target
         if self.visible(a, target):
-            a["known_positions"][target["id"]] = {"x": target["x"], "y": target["y"], "time": self.time}
+            a["known_positions"][target["id"]] = {"x": target["x"], "y": target["y"], "time": self.time, "room":target.get("room", "")}
         known = a["known_positions"].get(target["id"])
         if self.time >= task["next_repath"]:
             a["path"] = []
@@ -452,7 +463,7 @@ class World:
             a["path"].pop(0)
             return
         step = min(d, dt * .17)
-        proposed = {"x": a["x"] + dx / d * step, "y": a["y"] + dy / d * step}
+        proposed = {"x": a["x"] + dx / d * step, "y": a["y"] + dy / d * step, "room": a.get("room", "")}
         occupied = [b for b in self.agents.values() if b is not a and distance(b, proposed) < .42]
         if occupied:
             a["stalled"] += dt
@@ -520,8 +531,7 @@ class World:
                 conv["next_turn"] = self.time + 24
                 continue
             context = self._context(a, "conversation with " + self.agents[other]["name"], conversation=copy.deepcopy(conv["history"]), other_name=self.agents[other]["name"], message=conv["history"][-1]["text"] if conv["history"] else "Hello")
-            self.submit("chat", a, context, conversation=cid, other=other)
-            conv["waiting"] = True
+            conv["waiting"] = bool(self.submit("chat", a, context, conversation=cid, other=other))
 
     def _interaction(self):
         p = self.pending_interaction
@@ -591,7 +601,7 @@ class World:
                     elif arrived is None:
                         a["routine"] = None
                         a["next_decision"] = self.time + 60
-                elif self.time >= a["next_reflect"]:
+                elif self.time >= a["next_reflect"] and self.reflection_due(a):
                     a["next_reflect"] = self.time + 600
                     self.submit("reflect", a, self._context(a, "recent conversations and experiences"))
                 elif self.time >= a["next_decision"]:
@@ -702,3 +712,10 @@ class World:
         with self.lock:
             self.save()
             self.storage.close()
+
+
+from .roadmap import RoadmapMixin
+
+
+class World(RoadmapMixin, BaseWorld):
+    """Public simulation with the roadmap capabilities enabled."""
