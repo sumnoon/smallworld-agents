@@ -1,0 +1,38 @@
+{
+  "model": "gemma4:31b",
+  "seconds": 82.18,
+  "spec": {
+    "kind": "sequence",
+    "steps": [
+      {
+        "kind": "deliver",
+        "recipient": "elena",
+        "place": "cafe",
+        "item": "coffee",
+        "minutes": 0,
+        "guests": [],
+        "at": 0
+      },
+      {
+        "kind": "report",
+        "recipient": "visitor",
+        "place": "shop",
+        "item": "",
+        "minutes": 0,
+        "guests": [],
+        "at": 0
+      }
+    ],
+    "reply": "I'll get some coffee to Elena and let you know once it's done."
+  },
+  "validated_steps": 2,
+  "status": {
+    "mode": "ollama",
+    "model": "gemma4:31b",
+    "requests": 1,
+    "request_limit": 1000,
+    "tokens": 1482,
+    "failures": 0,
+    "last_error": ""
+  }
+}

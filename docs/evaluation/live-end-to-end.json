@@ -1,0 +1,53 @@
+{
+  "model": "gemma4:31b",
+  "embedding": {
+    "mode": "semantic",
+    "model": "embeddinggemma",
+    "requests": 1,
+    "request_limit": 500,
+    "tokens": 40,
+    "cached": 3,
+    "error": ""
+  },
+  "model_status": {
+    "mode": "ollama",
+    "model": "gemma4:31b",
+    "requests": 1,
+    "request_limit": 1000,
+    "tokens": 1339,
+    "failures": 0,
+    "last_error": ""
+  },
+  "task_status": "completed",
+  "step_results": [
+    {
+      "step": 0,
+      "kind": "deliver",
+      "description": "I delivered the coffee to Elena.",
+      "time": 32676.719999999,
+      "evidence": [
+        12,
+        16
+      ]
+    },
+    {
+      "step": 1,
+      "kind": "report",
+      "description": "I returned to Alex and reported the recorded results.",
+      "time": 32679.719999999,
+      "evidence": [
+        12,
+        16,
+        18
+      ]
+    }
+  ],
+  "metrics": {
+    "samir:task": {
+      "calls": 1,
+      "seconds": 99.40972309999779,
+      "tokens": 1339
+    }
+  },
+  "elapsed_seconds": 99.58
+}

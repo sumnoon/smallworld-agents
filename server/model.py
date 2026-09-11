@@ -63,6 +63,7 @@ class Cognition:
         self.last_error = ""
         self.retry_after = 0
         self.lock = threading.Lock()
+        self.usage_local = threading.local()
         if self.mode not in ("demo", "openai", "ollama"):
             raise ValueError("AGENT_PROVIDER must be demo, openai, or ollama")
         if self.mode == "ollama":
@@ -101,11 +102,11 @@ class Cognition:
             messages[0]["content"] += " Return only JSON matching this schema: " + json.dumps(schema)
             payload = {"model": self.model, "messages": messages, "stream": False, "think": False,
                        "format": schema, "keep_alive": "10m",
-                       "options": {"temperature": .3, "num_ctx": 8192, "num_predict": 384}}
+                       "options": {"temperature": .3, "num_ctx": 8192, "num_predict": 1024 if "steps" in schema["properties"] else 384}}
             request = urllib.request.Request(self.ollama_url + "/api/chat", json.dumps(payload).encode(),
                                              {"Content-Type": "application/json"})
         else:
-            payload = {"model": self.model, "store": False, "max_output_tokens": 1000, "input": messages,
+            payload = {"model": self.model, "store": False, "max_output_tokens": 1800 if "steps" in schema["properties"] else 1000, "input": messages,
                        "text": {"format": {"type": "json_schema", "name": "agent_result", "strict": True, "schema": schema}}}
             request = urllib.request.Request("https://api.openai.com/v1/responses", json.dumps(payload).encode(),
                                              {"Authorization": "Bearer " + self.key, "Content-Type": "application/json"})
@@ -114,6 +115,7 @@ class Cognition:
                 result = json.load(response)
             if not isinstance(result, dict):
                 raise ModelError("Model returned an invalid response")
+            self.usage_local.tokens = (result.get("prompt_eval_count", 0) + result.get("eval_count", 0)) if self.mode == "ollama" else result.get("usage", {}).get("total_tokens", 0)
             with self.lock:
                 self.tokens += (result.get("prompt_eval_count", 0) + result.get("eval_count", 0)) if self.mode == "ollama" else result.get("usage", {}).get("total_tokens", 0)
             if self.mode == "ollama":
@@ -133,14 +135,23 @@ class Cognition:
                     raise ModelError("Model returned no usable answer")
                 content = "".join(pieces)
             value = extract_json(content)
-            if not isinstance(value, dict) or set(value) != set(schema["properties"]):
-                raise ModelError("Model returned invalid fields")
-            for key, rule in schema["properties"].items():
-                expected = {"string": str, "integer": int, "array": list}[rule["type"]]
-                if type(value[key]) is not expected or ("enum" in rule and value[key] not in rule["enum"]):
+            def validate_value(value, rule):
+                expected = {"object": dict, "string": str, "integer": int, "array": list}[rule["type"]]
+                if type(value) is not expected or ("enum" in rule and value not in rule["enum"]):
                     raise ModelError("Model returned an invalid field type")
-                if rule["type"] == "array" and any(type(item) is not int for item in value[key]):
-                    raise ModelError("Model returned invalid memory references")
+                if rule["type"] == "object":
+                    if set(value) != set(rule["properties"]):
+                        raise ModelError("Model returned invalid fields")
+                    for key, child in rule["properties"].items():
+                        validate_value(value[key], child)
+                elif rule["type"] == "array":
+                    if len(value) > 30:
+                        raise ModelError("Model returned too many entries")
+                    if rule["items"]["type"] == "integer" and any(type(item) is not int for item in value):
+                        raise ModelError("Model returned invalid memory references")
+                    for item in value:
+                        validate_value(item, rule["items"])
+            validate_value(value, schema)
             with self.lock:
                 self.last_error = ""
                 self.retry_after = 0
@@ -156,6 +167,12 @@ class Cognition:
             raise ModelError(safe) from None
 
     def task(self, context):
+        if context.get("capabilities"):
+            from .planning import interpret
+            return interpret(self, context)
+        return self.simple_task(context)
+
+    def simple_task(self, context):
         if self.mode != "demo":
             return self._call(
                 "Classify context.request into a task specification; do not answer it as conversational dialogue. "
@@ -202,12 +219,17 @@ class Cognition:
                      "elena": f"Hi, {other}. I've been looking after the plants around here.",
                      "samir": f"How are you, {other}? I've been organizing things at the shop.",
                      "jun": f"Hi, {other}. The neighborhood gives me plenty of ideas to sketch."}
-            return lines[context["agent"]["id"]]
+            return lines.get(context["agent"]["id"], f"Good to see you, {other}. {context['agent']['bio']}")
         return f"I'm glad you stopped by. {context['agent']['bio']} You can ask what I remember, or give me an errand using Assign task."
 
     def decide(self, context):
         if self.mode != "demo":
             return self._call("Choose the next activity from known places, consistent with this resident's daily plan and needs. Use a known place ID; duration 1-20 minutes.", context, DECISION_SCHEMA)
+        needs = context["agent"].get("needs", {})
+        if needs.get("energy", 100) < 30:
+            return {"place": "home", "activity": "Resting to recover energy", "minutes": 10}
+        if needs.get("hunger", 0) > 70:
+            return {"place": "cafe", "activity": "Taking a meal break", "minutes": 10}
         block = context["agent"]["plan"][int(context["time"] // 600) % len(context["agent"]["plan"])]
         return {"place": block["place"], "activity": block["activity"], "minutes": 2}
 

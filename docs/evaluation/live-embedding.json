@@ -1,0 +1,12 @@
+{
+  "seconds": 7.34,
+  "status": {
+    "mode": "semantic",
+    "model": "embeddinggemma",
+    "requests": 1,
+    "tokens": 28,
+    "cached": 3,
+    "error": ""
+  },
+  "top_memory": "Elena spends her mornings gardening and tending plants."
+}

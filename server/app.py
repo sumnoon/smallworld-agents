@@ -19,7 +19,7 @@ def load_environment():
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
                 name, value = line.split("=", 1)
-                if name.strip() in ("AGENT_PROVIDER", "AGENT_MODEL", "OPENAI_API_KEY", "AGENT_MAX_REQUESTS", "OLLAMA_BASE_URL", "AGENT_MODEL_TIMEOUT"):
+                if name.strip() in ("AGENT_PROVIDER", "AGENT_MODEL", "OPENAI_API_KEY", "AGENT_MAX_REQUESTS", "OLLAMA_BASE_URL", "AGENT_MODEL_TIMEOUT", "AGENT_EMBEDDING_MODEL", "AGENT_MEMORY_RETRIEVAL", "AGENT_REFLECTIONS", "AGENT_MAX_EMBED_REQUESTS"):
                     os.environ.setdefault(name.strip(), value.strip().strip("\"'"))
 
 
@@ -59,6 +59,15 @@ class Handler(BaseHTTPRequestHandler):
         path = unquote(urlsplit(self.path).path)
         if path == "/api/state":
             self.send_json(self.server.world.snapshot())
+        elif path == "/api/replay":
+            with self.server.world.lock:
+                self.send_json(self.server.world.storage.replay_index())
+        elif path.startswith("/api/replay/"):
+            try:
+                with self.server.world.lock:
+                    self.send_json(self.server.world.storage.replay_frame(int(path.rsplit("/",1)[-1])))
+            except ValueError as exc:
+                self.send_json({"error":str(exc)},404)
         elif path == "/api/layout":
             self.send_json(self.server.world.layout)
         elif path.startswith("/api/agents/"):
@@ -110,27 +119,37 @@ class Handler(BaseHTTPRequestHandler):
         if not self.allowed_host() or (origin and urlsplit(origin).netloc != self.headers.get("Host")):
             self.send_json({"error": "Same-origin local commands only"}, 403)
             return
-        if urlsplit(self.path).path != "/api/command":
+        if urlsplit(self.path).path not in ("/api/command", "/api/scenario/validate"):
             self.send_json({"error": "Not found"}, 404)
             return
         try:
             length = int(self.headers.get("Content-Length", "0"))
-            if not 0 < length <= 8192:
+            if not 0 < length <= (131072 if urlsplit(self.path).path=="/api/scenario/validate" else 8192):
                 raise CommandError("Command too large or empty")
             data = json.loads(self.rfile.read(length))
             if not isinstance(data, dict):
                 raise CommandError("Command must be a JSON object")
-            self.send_json(self.server.world.command(data))
+            if urlsplit(self.path).path == "/api/scenario/validate":
+                from .scenario import validate, populate
+                layout = validate(data.get("layout"))
+                if data.get("residents"):
+                    layout = populate(layout,data["residents"])
+                self.send_json({"ok":True,"layout":layout})
+            else:
+                self.send_json(self.server.world.command(data))
         except (ValueError, UnicodeDecodeError) as exc:
             self.send_json({"error": str(exc)[:250]}, 400)
 
 
-def run(port=8766, database=None):
+def run(port=8766, database=None, scenario=None, residents=None):
     load_environment()
     if database is None:
         (ROOT / "data").mkdir(exist_ok=True)
         database = ROOT / "data/neighborhood.sqlite3"
-    world = World(database)
+    if (scenario or residents) and Path(database).exists():
+        raise ValueError("Use a new --database file when starting a custom scenario or population")
+    Path(database).parent.mkdir(parents=True,exist_ok=True)
+    world = World(database, scenario=scenario, residents=residents)
     server = SimulationHTTPServer(("127.0.0.1", port), world)
 
     def clock():
@@ -169,5 +188,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the local isometric neighborhood")
     parser.add_argument("--port", type=int, default=8766)
     parser.add_argument("--database", type=Path)
+    parser.add_argument("--scenario", type=Path)
+    parser.add_argument("--residents", type=int, choices=range(5,26), metavar="5-25")
     args = parser.parse_args()
-    run(args.port, args.database)
+    run(args.port, args.database, args.scenario, args.residents)
