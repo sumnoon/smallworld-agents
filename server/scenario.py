@@ -1,6 +1,8 @@
 """Portable scenario validation and original procedural town population."""
 import copy
 import re
+from collections import deque
+from .maps import obstacle_cells, LANDMARK_ASSETS
 
 SKINS = ["maya", "noah", "elena", "samir", "jun"]
 
@@ -15,8 +17,10 @@ def validate(layout):
             raise ValueError("Scenario entries must be objects")
         if any(type(p.get(k)) is not int or not 0 <= p[k] < n for k in ("x", "y")):
             raise ValueError("Scenario coordinates must be integer tiles within the map")
-    if set(layout.get("places", {})) != {"cafe", "shop", "park", "home", "studio"}:
+    if not isinstance(layout.get("places"),dict) or not {"cafe", "shop", "park", "home", "studio"}.issubset(layout["places"]) or len(layout["places"]) > 20:
         raise ValueError("Scenario must contain cafe, shop, park, home and studio")
+    if any(not isinstance(key,str) or not re.fullmatch(r"[a-z][a-z0-9_-]{0,30}",key) for key in layout["places"]):
+        raise ValueError("Place IDs must be simple identifiers")
     for pos in layout["places"].values():
         if not isinstance(pos, list) or len(pos) != 2:
             raise ValueError("Place coordinates need [x,y]")
@@ -36,6 +40,30 @@ def validate(layout):
         if type(p.get("i")) is not int or not 0 <= p["i"] <= 15 or type(p.get("w")) not in (int,float) or not 10 <= p["w"] <= 150:
             raise ValueError("Invalid prop artwork or width")
         blocked.add((p["x"],p["y"]))
+    terrain = layout.get("terrain")
+    if terrain is not None and (not isinstance(terrain,list) or len(terrain)!=n or any(not isinstance(row,list) or len(row)!=n or any(type(t) is not int or not 0<=t<=15 for t in row) for row in terrain)):
+        raise ValueError("Terrain must be a square grid of tile indices 0-15")
+    landmarks = layout.get("landmarks",[])
+    if not isinstance(landmarks,list) or len(landmarks)>80:
+        raise ValueError("At most 80 landmarks are allowed")
+    landmark_ids = set()
+    for obj in landmarks:
+        xy(obj)
+        if not isinstance(obj.get("id"),str) or not re.fullmatch(r"[a-z][a-z0-9_-]{0,40}",obj["id"]) or obj["id"] in landmark_ids or obj.get("asset") not in LANDMARK_ASSETS:
+            raise ValueError("Landmarks require a unique ID and known artwork")
+        landmark_ids.add(obj["id"])
+        bounds = obj.get("footprint")
+        if not isinstance(bounds,list) or len(bounds)!=4 or any(type(v) is not int or not 0<=v<n for v in bounds) or bounds[0]>bounds[2] or bounds[1]>bounds[3] or (bounds[2]-bounds[0]+1)*(bounds[3]-bounds[1]+1)>16:
+            raise ValueError("Landmark footprint must be a valid rectangle of at most 16 tiles")
+        if type(obj.get("w")) not in (int,float) or not 20<=obj["w"]<=280 or type(obj.get("base_offset",0)) not in (int,float) or not 0<=obj.get("base_offset",0)<=60 or type(obj.get("blocks_view",False)) is not bool:
+            raise ValueError("Invalid landmark dimensions or visibility")
+    districts = layout.get("districts",[])
+    if not isinstance(districts,list) or len(districts)>12:
+        raise ValueError("At most 12 districts are allowed")
+    for district in districts:
+        if not isinstance(district,dict) or district.get("place") not in layout["places"] or not isinstance(district.get("name"),str) or not 1<=len(district["name"])<=80 or not isinstance(district.get("color"),str) or not re.fullmatch(r"#[0-9a-fA-F]{6}",district["color"]):
+            raise ValueError("Invalid district destination, name or color")
+    blocked = obstacle_cells(layout)
     if any(tuple(p) in blocked for p in layout["places"].values()):
         raise ValueError("Places must be on walkable ground")
     people = layout.get("residents")
@@ -65,6 +93,17 @@ def validate(layout):
                 raise ValueError("Invalid daily activity")
     if "visitor" not in ids:
         raise ValueError("Scenario requires the visitor player")
+    start = tuple(layout["places"]["park"])
+    reached, queue = {start}, deque([start])
+    while queue:
+        x,y = queue.popleft()
+        for dx,dy in ((1,0),(-1,0),(0,1),(0,-1)):
+            point = x+dx,y+dy
+            if 0<=point[0]<n and 0<=point[1]<n and point not in blocked and point not in reached:
+                reached.add(point)
+                queue.append(point)
+    if any(tuple(p) not in reached for p in layout["places"].values()) or any((p["x"],p["y"]) not in reached for p in people):
+        raise ValueError("All places and resident spawns must connect to the park")
     return layout
 
 
@@ -72,7 +111,7 @@ def populate(layout, count):
     layout = copy.deepcopy(layout)
     if type(count) is not int or not 5 <= count <= 25:
         raise ValueError("Population must be between 5 and 25 residents")
-    occupied = {(p["x"],p["y"]) for p in layout["residents"]+layout["props"]}
+    occupied = obstacle_cells(layout) | {(p["x"],p["y"]) for p in layout["residents"]}
     for b in layout["buildings"]:
         occupied.update((x,y) for x in range(b["x"]-2,b["x"]+2) for y in range(b["y"]-2,b["y"]+2))
     names = ["Asha","Leo","Mina","Omar","Iris","Theo","Nadia","Arun","Sofia","Rafi","Lina","Hugo","Zara","Emil","Nila","Ben","Tara","Yuki","Rosa","Eli"]

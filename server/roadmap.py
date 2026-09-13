@@ -9,6 +9,7 @@ import uuid
 from contextlib import contextmanager
 from pathlib import Path
 from .memory import SemanticMemory
+from .maps import obstacle_cells, upgrade_classic
 from .scenario import validate, populate, interiors
 
 FINISHED = {"completed", "failed", "cancelled", "declined"}
@@ -38,7 +39,20 @@ class RoadmapMixin:
             a.setdefault("room", "")
             a.setdefault("skin", a["id"])
             a.setdefault("last_reflection", self.time)
+        upgraded = False
+        if saved and self.scenario_input is None:
+            self.layout, upgraded = upgrade_classic(self.layout)
+            if upgraded:
+                self.blocked = obstacle_cells(self.layout)
+                profiles = {p["id"]:p for p in self.layout["residents"]}
+                previous = {p["id"]:p for p in saved.get("layout",{}).get("residents",[])}
+                for aid,a in self.agents.items():
+                    if aid in profiles and aid in previous and a["plan"] == previous[aid]["plan"]:
+                        a["plan"] = copy.deepcopy(profiles[aid]["plan"])
+                self.event("system","map_expanded","New paths lead to the market, gardens, waterfront and fountain square.")
         self.semantic.cache = {r["key"]:json.loads(r["vector"]) for r in self.storage.db.execute("SELECT * FROM embeddings")}
+        if upgraded:
+            self.save()
         self.record()
 
     def initial_layout(self):
@@ -55,7 +69,7 @@ class RoadmapMixin:
         if query == "recent conversations and experiences":
             candidates = [m for m in candidates if m["kind"] != "reflection"]
             context["memories"] = [m for m in context["memories"] if m["kind"] != "reflection"]
-        context.update(memory_candidates=candidates, memory_query=query or a["status"], capabilities="plans-v2",
+        context.update(place_names={d["place"]:d["name"] for d in self.layout.get("districts",[])}, memory_candidates=candidates, memory_query=query or a["status"], capabilities="plans-v2",
             objects=[{**o,"room":room} for room,r in self.layout.get("interiors",{}).items() for o in r["objects"]],
             commitments=[copy.deepcopy(ap) for ap in self.appointments.values() if a["id"] in ap["accepted"] and ap["status"] == "scheduled"])
         return context
@@ -464,6 +478,16 @@ class RoadmapMixin:
                     raise CommandError("That proposal is no longer available")
                 proposal["status"] = "declined"
                 self.event(proposal["agent"],"proposal_declined","The proposed task was declined.",{"proposal":proposal["id"]})
+            elif kind == "travel":
+                place = data.get("place")
+                if place not in self.layout["places"]:
+                    raise CommandError("Choose a known destination")
+                visitor = self.agents["visitor"]
+                self._interrupt(visitor)
+                x,y = self.layout["places"][place]
+                visitor["destination"] = {"x":x,"y":y,"room":""}
+                self.pending_interaction = None
+                result["message"] = "Alex is walking to the "+place
             elif kind == "enter":
                 room = data.get("room", "")
                 if room and room not in self.layout["interiors"]:

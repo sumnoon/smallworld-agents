@@ -40,3 +40,7 @@ The new Canvas views were rendered from actual world snapshots and visually insp
 4. Enter replay, scrub, play, and return; confirm the live town stays paused.
 5. Enable speech, hear a new selected-resident line, dictate a message, review it, and send.
 6. Export a 25-resident scenario and start it using a new database.
+
+## Map expansion update
+
+The default map is now 24 x 24 with four new destinations and four original transparent sprites. Nine new Python checks cover preservation of old collision geometry, district reachability, boardwalk navigation, natural-language district names, actual resident travel, travel out of an interior, map validation, save migration and asset metadata. A dependency-free JavaScript check verifies the district camera targets. There are 57 Python tests in total. The original map is retained as a separate scenario, and old custom maps are not automatically replaced.

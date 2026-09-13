@@ -1,6 +1,6 @@
 """Bounded hierarchical task interpretation. Execution stays in the world."""
 import re
-from .model import object_schema, TEXT
+from .model import object_schema, TEXT, normalize_place_names
 
 STEP = object_schema({"kind":{"type":"string","enum":["deliver","visit","meet","wait","report","use","inspect","invite","unsupported"]},
     "recipient":TEXT,"place":TEXT,"item":TEXT,"minutes":{"type":"integer"},"guests":{"type":"array","items":TEXT},"at":{"type":"integer"}})
@@ -16,7 +16,7 @@ def interpret(model, context):
             "Unused strings empty, arrays empty, integers zero. Unsupported or ambiguous requests return one unsupported step and a clarification reply. "
             "Do not invent capabilities or accept unspecified recipients. The world validates every step.", context, PLAN)
         return {"kind":"sequence", **result}
-    text = context["request"].lower().replace("sameer", "samir")
+    text = normalize_place_names(context["request"].lower().replace("sameer", "samir"))
     parts = re.split(r"\s+(?:and then|then|and report back|and come back)\s*",text)
     if "and report back" in text or "and come back" in text:
         parts = [parts[0], "report back"]
@@ -41,7 +41,7 @@ def interpret(model, context):
                 if at <= context["time"]:
                     at += 86400
             step.update(kind="invite",guests=guests,place=next((p for p in context["places"] if p in part),""),at=at)
-        elif any(w in part for w in ("use ","inspect ","sit ","sleep ","read ")):
+        elif re.search(r"\b(?:use|inspect|sit|sleep|read)\b",part):
             obj = next((o for o in context.get("objects",[]) if o["id"] in part or o["name"].lower() in part),None)
             if obj:
                 step.update(kind="inspect" if "inspect" in part else "use",item=obj["id"],place=obj["room"])

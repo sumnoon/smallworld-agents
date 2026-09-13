@@ -17,3 +17,7 @@ Open `asset-preview.html` from the project root in a browser. It can also be ser
 Run `node tools/inspect-assets.mjs` from the project root to rebuild `manifest.json` and `manifest.js`. This tool only reads PNG pixels and writes metadata, leaving generated artwork intact. Runtime terrain rendering maps source diamonds onto exact 2:1 ground diamonds to align the grid. The preview uses one ground level and complete building exteriors; layered occlusion and enterable interiors remain implementation work.
 
 Visual review completed on the local preview: terrain and buildings render together; character sprites have real transparency; all source frames and gallery items load. Inspect the walk cycles at the intended in-game scale before adding more residents.
+
+## Vibrant map expansion
+
+The playable map now adds four original generated sprites: a market pavilion, conservatory, plaza fountain and blossom tree. All are stored under [expansion/](expansion/README.md) with actual alpha and measured manifest bounds. The complete pack now has 13 PNG sheets and 240 frames/icons. [Production prompts](sources/expansion-prompts.json) preserve the built-in generation requests. The standalone art preview remains the original gallery; the playable map shows the expansion.

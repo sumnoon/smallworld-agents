@@ -1,0 +1,22 @@
+[
+  {
+    "name": "market-pavilion",
+    "mode": "built-in image_gen",
+    "prompt": "Use case: stylized-concept. Asset type: original sprite for Smallworld Agents map expansion. A single standalone small neighborhood farmers market pavilion as a production game sprite. Warm painterly 2.5D isometric illustration, orthographic 2:1 diamond ground perspective, camera sees front and right side, cozy hand-painted mobile town-game style, clean readable silhouette. Coral-red and cream striped canvas awnings, honey-colored timber beams, teal counter, abundant baskets of oranges lemons purple grapes and green vegetables, two small flower pots. Vibrant but natural sunny palette, soft upper-left sunlight, no people. Entire building and stall within the image with generous empty margins. TRUE TRANSPARENT BACKGROUND with alpha, no ground platform, no scenery, no sky, no checkerboard, no text or lettering, no watermark. One isolated pavilion, not a sprite sheet."
+  },
+  {
+    "name": "garden-conservatory",
+    "mode": "built-in image_gen",
+    "prompt": "Use case: stylized-concept. Asset type: original sprite for Smallworld Agents map expansion. A single standalone little botanical conservatory building as a production game sprite. Warm painterly 2.5D isometric illustration, orthographic 2:1 diamond ground perspective, camera sees front and right side, cozy hand-painted town-game style, crisp readable silhouette. Elegant teal-painted framing with pale aqua glass roof panels, warm terracotta low brick base, orange double entrance doors, rich emerald ferns visible through glass, bougainvillea with bright magenta flowers climbing one corner. Vibrant natural sunny palette, soft upper-left sunlight, no people. Entire building within image with generous empty margins. TRUE TRANSPARENT BACKGROUND with alpha, no ground platform, no scenery, no sky, no checkerboard, no text or lettering, no watermark. One isolated building, not a sprite sheet."
+  },
+  {
+    "name": "plaza-fountain",
+    "mode": "built-in image_gen",
+    "prompt": "Use case: stylized-concept. Asset type: original sprite for Smallworld Agents map expansion. A single standalone circular neighborhood plaza fountain as a production game sprite. Warm painterly 2.5D isometric illustration, orthographic 2:1 diamond ground perspective, cozy hand-painted town-game style, clean readable silhouette. Low round warm cream stone basin, bright clear turquoise water, small sculpted center pedestal with two scalloped bowls and graceful falling water streams, a few tiny floating leaves. Vibrant natural sunny palette, soft upper-left sunlight. Entire fountain visible with generous empty margins. TRUE TRANSPARENT BACKGROUND with alpha, no ground platform or plaza pavement, no surrounding scenery, no people, no sky, no checkerboard, no text, no watermark. One isolated fountain, not a sprite sheet."
+  },
+  {
+    "name": "blossom-tree",
+    "mode": "built-in image_gen",
+    "prompt": "Use case: stylized-concept. Asset type: original sprite for Smallworld Agents map expansion. A single standalone flowering ornamental tree as a production game sprite. Warm painterly 2.5D isometric illustration, orthographic 2:1 diamond ground perspective, cozy hand-painted town-game style, clean readable silhouette. Gracefully branching warm brown trunk, broad rounded crown full of coral pink and peach blossoms with touches of fresh green leaves, attractive asymmetric canopy. Vibrant natural sunny palette, soft upper-left sunlight. Entire tree and trunk base visible, centered with generous transparent margins. TRUE TRANSPARENT BACKGROUND with alpha, no ground platform, no grass patch, no surrounding scenery, no people, no sky, no checkerboard, no text or watermark. One isolated tree, not a sprite sheet."
+  }
+]
