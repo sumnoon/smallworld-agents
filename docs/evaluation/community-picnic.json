@@ -1,0 +1,554 @@
+{
+  "provider": "demo",
+  "status": "completed",
+  "ticks": 571,
+  "simulated_minutes": 28.55,
+  "served": [
+    "maya",
+    "noah",
+    "elena"
+  ],
+  "helper": "noah",
+  "helper_status": "completed",
+  "collision_ticks": 0,
+  "unique_inventory": true,
+  "seeds_remaining": 11,
+  "market_supplies_remaining": 11,
+  "events": [
+    {
+      "id": 47,
+      "time": 34113.0,
+      "actor": "maya",
+      "kind": "dialogue",
+      "text": "Maya: Grew vegetables, received supplies, prepared food and served the guests in person.",
+      "payload": {
+        "recipients": []
+      }
+    },
+    {
+      "id": 46,
+      "time": 34113.0,
+      "actor": "maya",
+      "kind": "task_completed",
+      "text": "Grew vegetables, received supplies, prepared food and served the guests in person.",
+      "payload": {
+        "task": "task_bb598d5494",
+        "evidence": [
+          14,
+          18,
+          21,
+          27,
+          33,
+          34,
+          36,
+          37,
+          39,
+          44
+        ]
+      }
+    },
+    {
+      "id": 45,
+      "time": 34113.0,
+      "actor": "maya",
+      "kind": "dialogue",
+      "text": "Maya: We made this together. Thank you for joining the picnic!",
+      "payload": {
+        "recipients": [
+          "noah",
+          "elena"
+        ]
+      }
+    },
+    {
+      "id": 44,
+      "time": 34113.0,
+      "actor": "maya",
+      "kind": "picnic_served",
+      "text": "Picnic food served to everyone present.",
+      "payload": {
+        "task": "task_bb598d5494",
+        "item": "0b26d0f67987430aa05d168d3e83a18b",
+        "residents": [
+          "maya",
+          "noah",
+          "elena"
+        ],
+        "remaining_servings": 1
+      }
+    },
+    {
+      "id": 43,
+      "time": 34110.0,
+      "actor": "elena",
+      "kind": "attendance",
+      "text": "Elena attended the meeting.",
+      "payload": {
+        "appointment": "70e61a61cf06"
+      }
+    },
+    {
+      "id": 42,
+      "time": 34110.0,
+      "actor": "noah",
+      "kind": "attendance",
+      "text": "Noah attended the meeting.",
+      "payload": {
+        "appointment": "70e61a61cf06"
+      }
+    },
+    {
+      "id": 41,
+      "time": 34110.0,
+      "actor": "maya",
+      "kind": "attendance",
+      "text": "Maya attended the meeting.",
+      "payload": {
+        "appointment": "70e61a61cf06"
+      }
+    },
+    {
+      "id": 40,
+      "time": 32997.0,
+      "actor": "noah",
+      "kind": "activity",
+      "text": "Noah is reading.",
+      "payload": {}
+    },
+    {
+      "id": 39,
+      "time": 32976.0,
+      "actor": "elena",
+      "kind": "invitation_accepted",
+      "text": "Invitation accepted",
+      "payload": {
+        "appointment": "70e61a61cf06",
+        "task": "task_bb598d5494"
+      }
+    },
+    {
+      "id": 38,
+      "time": 32976.0,
+      "actor": "elena",
+      "kind": "dialogue",
+      "text": "Elena: Yes, I accept. I'll plan to be there.",
+      "payload": {
+        "recipients": [
+          "maya"
+        ]
+      }
+    },
+    {
+      "id": 37,
+      "time": 32976.0,
+      "actor": "maya",
+      "kind": "dialogue",
+      "text": "Maya: Would you join me at the plaza at 09:28?",
+      "payload": {
+        "recipients": [
+          "elena"
+        ]
+      }
+    },
+    {
+      "id": 36,
+      "time": 32964.0,
+      "actor": "noah",
+      "kind": "invitation_accepted",
+      "text": "Invitation accepted",
+      "payload": {
+        "appointment": "70e61a61cf06",
+        "task": "task_bb598d5494"
+      }
+    },
+    {
+      "id": 35,
+      "time": 32964.0,
+      "actor": "noah",
+      "kind": "dialogue",
+      "text": "Noah: Yes, I accept. I'll plan to be there.",
+      "payload": {
+        "recipients": [
+          "maya"
+        ]
+      }
+    },
+    {
+      "id": 34,
+      "time": 32964.0,
+      "actor": "maya",
+      "kind": "dialogue",
+      "text": "Maya: Would you join me at the plaza at 09:28?",
+      "payload": {
+        "recipients": [
+          "noah"
+        ]
+      }
+    },
+    {
+      "id": 33,
+      "time": 32907.0,
+      "actor": "maya",
+      "kind": "community_prepare",
+      "text": "Preparing picnic food: finished.",
+      "payload": {
+        "task": "task_bb598d5494",
+        "item": {
+          "id": "0b26d0f67987430aa05d168d3e83a18b",
+          "kind": "picnic_food",
+          "ingredients": [
+            "e5c5b1f015774ce5a1998c1b212dcd0c",
+            "e4a61ef1318a4b66b800bca1b50d7762"
+          ],
+          "servings": 4
+        },
+        "site": {
+          "x": 6,
+          "y": 6,
+          "room": ""
+        }
+      }
+    },
+    {
+      "id": 32,
+      "time": 32871.0,
+      "actor": "noah",
+      "kind": "activity",
+      "text": "Noah is reading.",
+      "payload": {}
+    },
+    {
+      "id": 31,
+      "time": 32796.0,
+      "actor": "noah",
+      "kind": "dialogue",
+      "text": "Noah: Handed over the item in person.",
+      "payload": {
+        "recipients": []
+      }
+    },
+    {
+      "id": 30,
+      "time": 32796.0,
+      "actor": "noah",
+      "kind": "task_completed",
+      "text": "Handed over the item in person.",
+      "payload": {
+        "task": "task_9b9f479b14",
+        "evidence": [
+          19,
+          28
+        ]
+      }
+    },
+    {
+      "id": 29,
+      "time": 32796.0,
+      "actor": "noah",
+      "kind": "dialogue",
+      "text": "Noah: Here are the supplies for our picnic.",
+      "payload": {
+        "recipients": [
+          "maya"
+        ]
+      }
+    },
+    {
+      "id": 28,
+      "time": 32796.0,
+      "actor": "noah",
+      "kind": "community_handoff",
+      "text": "Noah handed supplies to Maya",
+      "payload": {
+        "task": "task_9b9f479b14",
+        "item": "e4a61ef1318a4b66b800bca1b50d7762",
+        "recipient": "maya"
+      }
+    },
+    {
+      "id": 27,
+      "time": 32760.0,
+      "actor": "maya",
+      "kind": "community_harvest",
+      "text": "Harvesting vegetables: finished.",
+      "payload": {
+        "task": "task_bb598d5494",
+        "item": {
+          "id": "e5c5b1f015774ce5a1998c1b212dcd0c",
+          "kind": "vegetables"
+        },
+        "site": {
+          "x": 8,
+          "y": 17,
+          "room": ""
+        }
+      }
+    },
+    {
+      "id": 26,
+      "time": 32700.0,
+      "actor": "elena",
+      "kind": "observation",
+      "text": "Elena noticed Noah nearby.",
+      "payload": {}
+    },
+    {
+      "id": 25,
+      "time": 32700.0,
+      "actor": "noah",
+      "kind": "observation",
+      "text": "Noah noticed Elena nearby.",
+      "payload": {}
+    },
+    {
+      "id": 24,
+      "time": 32670.0,
+      "actor": "maya",
+      "kind": "task_blocked",
+      "text": "Maya: Waiting for the watered vegetables to ripen",
+      "payload": {
+        "task": "task_bb598d5494"
+      }
+    },
+    {
+      "id": 23,
+      "time": 32610.0,
+      "actor": "maya",
+      "kind": "task_blocked",
+      "text": "Maya: Waiting for the watered vegetables to ripen",
+      "payload": {
+        "task": "task_bb598d5494"
+      }
+    },
+    {
+      "id": 22,
+      "time": 32550.0,
+      "actor": "maya",
+      "kind": "task_blocked",
+      "text": "Maya: Waiting for the watered vegetables to ripen",
+      "payload": {
+        "task": "task_bb598d5494"
+      }
+    },
+    {
+      "id": 21,
+      "time": 32547.0,
+      "actor": "maya",
+      "kind": "community_water",
+      "text": "Watering vegetables: finished.",
+      "payload": {
+        "task": "task_bb598d5494",
+        "item": null,
+        "site": {
+          "x": 8,
+          "y": 17,
+          "room": ""
+        }
+      }
+    },
+    {
+      "id": 20,
+      "time": 32520.0,
+      "actor": "noah",
+      "kind": "plan_step_completed",
+      "text": "Finished buy with verified world effects.",
+      "payload": {
+        "task": "task_9b9f479b14",
+        "step": 0,
+        "evidence": [
+          19
+        ]
+      }
+    },
+    {
+      "id": 19,
+      "time": 32520.0,
+      "actor": "noah",
+      "kind": "community_buy",
+      "text": "Buying picnic supplies: finished.",
+      "payload": {
+        "task": "task_9b9f479b14",
+        "item": {
+          "id": "e4a61ef1318a4b66b800bca1b50d7762",
+          "kind": "supplies"
+        },
+        "site": {
+          "x": 19,
+          "y": 7,
+          "room": ""
+        }
+      }
+    },
+    {
+      "id": 18,
+      "time": 32514.0,
+      "actor": "maya",
+      "kind": "community_plant",
+      "text": "Planting vegetables: finished.",
+      "payload": {
+        "task": "task_bb598d5494",
+        "item": null,
+        "site": {
+          "x": 8,
+          "y": 17,
+          "room": ""
+        }
+      }
+    },
+    {
+      "id": 17,
+      "time": 32436.0,
+      "actor": "elena",
+      "kind": "observation",
+      "text": "Elena noticed Maya nearby.",
+      "payload": {}
+    },
+    {
+      "id": 16,
+      "time": 32436.0,
+      "actor": "maya",
+      "kind": "observation",
+      "text": "Maya noticed Elena nearby.",
+      "payload": {}
+    },
+    {
+      "id": 15,
+      "time": 32424.0,
+      "actor": "maya",
+      "kind": "observation",
+      "text": "Maya noticed Alex nearby.",
+      "payload": {}
+    },
+    {
+      "id": 14,
+      "time": 32421.0,
+      "actor": "maya",
+      "kind": "picnic_help_accepted",
+      "text": "Supply help accepted in person",
+      "payload": {
+        "task": "task_bb598d5494",
+        "helper": "noah"
+      }
+    },
+    {
+      "id": 13,
+      "time": 32421.0,
+      "actor": "noah",
+      "kind": "dialogue",
+      "text": "Noah: I'll get started. You can follow my progress in the task list.",
+      "payload": {
+        "recipients": []
+      }
+    },
+    {
+      "id": 12,
+      "time": 32421.0,
+      "actor": "noah",
+      "kind": "task_accepted",
+      "text": "Noah accepted: Buy and bring picnic supplies",
+      "payload": {
+        "task": "task_9b9f479b14"
+      }
+    },
+    {
+      "id": 11,
+      "time": 32421.0,
+      "actor": "noah",
+      "kind": "dialogue",
+      "text": "Noah: Yes. I'll buy supplies and bring them back to you.",
+      "payload": {
+        "recipients": [
+          "maya"
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "time": 32421.0,
+      "actor": "maya",
+      "kind": "dialogue",
+      "text": "Maya: Will you buy supplies at the market and bring them to me for a picnic?",
+      "payload": {
+        "recipients": [
+          "noah"
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "time": 32400.0,
+      "actor": "maya",
+      "kind": "dialogue",
+      "text": "Maya: I'll get started. You can follow my progress in the task list.",
+      "payload": {
+        "recipients": []
+      }
+    },
+    {
+      "id": 8,
+      "time": 32400.0,
+      "actor": "maya",
+      "kind": "task_accepted",
+      "text": "Maya accepted: Organize a picnic",
+      "payload": {
+        "task": "task_bb598d5494"
+      }
+    },
+    {
+      "id": 7,
+      "time": 32400.0,
+      "actor": "samir",
+      "kind": "observation",
+      "text": "Samir noticed Noah nearby.",
+      "payload": {}
+    },
+    {
+      "id": 6,
+      "time": 32400.0,
+      "actor": "elena",
+      "kind": "observation",
+      "text": "Elena noticed Alex nearby.",
+      "payload": {}
+    },
+    {
+      "id": 5,
+      "time": 32400.0,
+      "actor": "noah",
+      "kind": "observation",
+      "text": "Noah noticed Alex nearby.",
+      "payload": {}
+    },
+    {
+      "id": 4,
+      "time": 32400.0,
+      "actor": "noah",
+      "kind": "observation",
+      "text": "Noah noticed Samir nearby.",
+      "payload": {}
+    },
+    {
+      "id": 3,
+      "time": 32400.0,
+      "actor": "noah",
+      "kind": "observation",
+      "text": "Noah noticed Maya nearby.",
+      "payload": {}
+    },
+    {
+      "id": 2,
+      "time": 32400.0,
+      "actor": "maya",
+      "kind": "observation",
+      "text": "Maya noticed Noah nearby.",
+      "payload": {}
+    },
+    {
+      "id": 1,
+      "time": 32400.0,
+      "actor": "system",
+      "kind": "start",
+      "text": "A new morning in the neighborhood.",
+      "payload": {}
+    }
+  ]
+}

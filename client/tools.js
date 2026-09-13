@@ -20,13 +20,19 @@ $('#voice').onchange=e=>{lastSpoken=Math.max(0,...(state?.events||[]).map(e=>e.i
 const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 if(!Recognition){$('#dictate').disabled=true;$('#dictate').title='Speech recognition is unavailable in this browser';}else{$('#dictate').onclick=()=>{const recognition=new Recognition();recognition.lang='en-US';recognition.onresult=e=>{$('#message').value=e.results[0][0].transcript;$('#message').focus();};recognition.onerror=e=>toast('Dictation: '+e.error);recognition.start();};}
 window.updateTownTools=()=>{if(!state)return;
+const community=state.community||{},resident=state.agents.find(a=>a.id===selected),beds=Object.values(community.beds||{}),ripe=beds.filter(b=>b.ready_at&&state.time>=b.ready_at).length;
+$('#community-status').textContent=`${community.seeds??0} seeds available · ${beds.length} planted beds (${ripe} ripe) · ${community.supplies??0} market supplies · ${resident?.name||'Resident'}: ${resident?.credits??25} credits`;
+$('#weather').value=community.weather||'clear';
+$('#picnic-progress').innerHTML=state.tasks.filter(t=>t.picnic).slice(-2).map(t=>`<p><strong>${esc(state.agents.find(a=>a.id===t.agent)?.name)}'s picnic · ${esc(t.status)}</strong><br>${esc(t.blocker||t.steps[t.step]||'Meal served')} · helper: ${esc(state.agents.find(a=>a.id===t.picnic.helper)?.name||'looking for a volunteer')} · ${t.picnic.served.length} people served</p>`).join('');
+for(const id of ['picnic-start','garden-start','market-start','weather'])$('#'+id).disabled=window.townReplay;
+
 const districts=renderer.layout.districts||[{name:'Village',place:'park',color:'#6d9064'}],stamp=JSON.stringify(districts);
 if(stamp!==districtStamp){districtStamp=stamp;$('#district-links').innerHTML=districts.map(d=>`<button data-district="${esc(d.place)}" style="--district-color:${esc(d.color)}">${esc(d.name)}</button>`).join('');}
 if(!renderer.layout.places[activeDistrict])activeDistrict='park';
 const current=districts.find(d=>d.place===activeDistrict);$('#walk-district').textContent='Walk to '+(current?.name||activeDistrict);document.querySelectorAll('[data-district]').forEach(b=>b.classList.toggle('active',b.dataset.district===activeDistrict));
 $('#proposals').innerHTML=(state.proposals||[]).filter(p=>p.status==='proposed').map(p=>`<p>${esc(p.request)} <button data-accept-proposal="${esc(p.id)}">Accept task</button> <button data-decline-proposal="${esc(p.id)}">Decline</button></p>`).join('')||'No suggestions waiting.';
 $('#appointments').innerHTML=(state.appointments||[]).map(a=>`<p>${esc(a.place)} · ${formatTime(a.at)} · ${esc(a.status)}<br>${a.invited.length}/${a.guests.length} invited · ${a.accepted.length-1} guests accepted · ${a.attended.filter(id=>id!==a.host).length} guests attended</p>`).join('')||'No meetings scheduled.';
-$('#metrics').textContent=JSON.stringify({memory:state.memory,queued:state.queue,operations:state.metrics},null,2);
+$('#metrics').textContent=JSON.stringify({memory:state.memory,queued:state.queue,operations:state.metrics,modelTiming:state.model.last_timing},null,2);
 const room=renderer?.room(),objects=renderer?.layout.interiors?.[room]?.objects||[];$('#object-tools').innerHTML=objects.map(o=>`<button data-object="${esc(o.id)}">Ask ${esc(state.agents.find(a=>a.id===selected)?.name||'resident')} to use ${esc(o.name)}</button>`).join('')||'Choose an interior view to see its objects.';
 if($('#voice').checked&&!window.townReplay&&window.speechSynthesis){const fresh=state.events.filter(e=>e.id>lastSpoken&&e.kind==='dialogue'&&e.actor===selected).sort((a,b)=>a.id-b.id);lastSpoken=Math.max(lastSpoken,...state.events.map(e=>e.id));if(!speechSynthesis.speaking&&fresh.length){const line=fresh.at(-1);speechSynthesis.speak(new SpeechSynthesisUtterance(line.text));}}
 };
@@ -38,3 +44,8 @@ $('#district-links').onclick=e=>{const b=e.target.closest('[data-district]');if(
 $('#walk-district').onclick=()=>action({kind:'travel',place:activeDistrict});
 $('#place-labels').onchange=e=>{if(renderer)renderer.placeLabels=e.target.checked;};
 $('#find-resident').onclick=()=>{const a=state?.agents.find(a=>a.id===selected);if(!a||!renderer)return;if(a.room){renderer.view=a.room;renderer.fit();$('#room-view').value=a.room;}else{renderer.focusPoint(a.x,a.y);$('#room-view').value='';}};
+
+$('#picnic-start').onclick=()=>action({kind:'task',agent:selected,text:'Organize a picnic'});
+$('#garden-start').onclick=()=>action({kind:'task',agent:selected,text:'Plant vegetables then water vegetables then harvest vegetables'});
+$('#market-start').onclick=()=>action({kind:'task',agent:selected,text:'Buy picnic supplies'});
+$('#weather').onchange=e=>action({kind:'weather',weather:e.target.value});

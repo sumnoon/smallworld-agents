@@ -13,6 +13,9 @@ class SemanticMemory:
         self.model = os.getenv("AGENT_EMBEDDING_MODEL", "")
         self.url = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
         self.cache = {}
+        self.dirty = {}
+        self.dirty_lock = threading.Lock()
+        self.last_retrieval = "lexical"
         self.lock = threading.Lock()
         self.calls = self.tokens = 0
         self.limit = max(1,int(os.getenv("AGENT_MAX_EMBED_REQUESTS", "500")))
@@ -23,7 +26,8 @@ class SemanticMemory:
     def key(self, text):
         return hashlib.sha256((self.model + "\0" + text).encode()).hexdigest()
 
-    def rank(self, context):
+    def rank(self, context, allow_network=True):
+        self.last_retrieval = "lexical"
         candidates = context.pop("memory_candidates", context.get("memories", []))
         if not self.enabled:
             context["memories"] = []
@@ -31,6 +35,8 @@ class SemanticMemory:
         if not self.model or time.monotonic() < self.retry_at:
             return context
         query = context.pop("memory_query", "recent experiences")
+        if not allow_network and (self.key(query) not in self.cache or any(self.key(m["text"]) not in self.cache for m in candidates)):
+            return context
         texts = list(dict.fromkeys([query] + [m["text"] for m in candidates]))
         try:
             with self.lock:
@@ -50,6 +56,8 @@ class SemanticMemory:
                     self.tokens += result.get("prompt_eval_count", 0)
                     for text, vector in zip(batch, vectors):
                         self.cache[self.key(text)] = vector
+                        with self.dirty_lock:
+                            self.dirty[self.key(text)] = vector
                 q = self.cache[self.key(query)]
                 def score(memory):
                     v = self.cache[self.key(memory["text"])]
@@ -60,6 +68,7 @@ class SemanticMemory:
                 ranked = [{**m, "retrieval_score": round(score(m), 3), "retrieval_method": "semantic"} for m in candidates]
                 context["memories"] = sorted(ranked, key=lambda m:(m["retrieval_score"],m["id"]), reverse=True)[:8]
                 self.error = ""
+                self.last_retrieval = "semantic"
                 if len(self.cache) > 10000:
                     self.cache = {self.key(t): self.cache[self.key(t)] for t in texts}
         except Exception as exc:
@@ -67,6 +76,13 @@ class SemanticMemory:
             self.retry_at = time.monotonic() + 60
         return context
 
+    def drain_dirty(self):
+        with self.dirty_lock:
+            values = list(self.dirty.items())
+            self.dirty.clear()
+            return values
+
     def status(self):
         return {"mode": "disabled" if not self.enabled else "semantic" if self.model and not self.error else "lexical",
+                "last_retrieval": self.last_retrieval, "live_embeddings": os.getenv("AGENT_LIVE_EMBEDDINGS", "off") == "on",
                 "model": self.model, "requests": self.calls, "request_limit":self.limit, "tokens": self.tokens, "cached": len(self.cache), "error": self.error}

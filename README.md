@@ -27,6 +27,7 @@ Inspired by [Generative Agents: Interactive Simulacra of Human Behavior](https:/
 | Talk | Proximity conversations, speech bubbles, and persistent conversation history |
 | Assign errands | Up to six ordered steps: deliver, visit, meet, wait, report, inspect, use, and invite |
 | Coordinate meetings | Physical invitations, explicit acceptance or decline, and verified attendance |
+| Cooperate | Grow vegetables, buy market supplies, cook at the cafe, and host a neighborhood picnic with a recruited helper |
 | Go indoors | Four furnished cutaway rooms and reserved object use |
 | Replay | Scrub recorded world states without regenerating model answers |
 | Create a town | Import, edit, validate, and export scenarios; optional browser voice controls |
@@ -100,6 +101,8 @@ AGENT_MODEL_TIMEOUT=120
 AGENT_MAX_REQUESTS=1000
 ```
 
+`.env.example` ships with `AGENT_MAX_REQUESTS=100` as a conservative default; raise it for long live sessions.
+
 Keep Ollama running and restart `python run.py`. The interface displays **OLLAMA LIVE** and the model name. No cloud API key is needed, and the default Ollama endpoint is on your computer.
 
 **Using an Ollama cloud model?** A `-cloud` name such as `gemma4:31b-cloud` still goes through your local Ollama endpoint, which proxies it to `ollama.com`, so run `ollama signin` once and confirm the name appears in `ollama list`. Set `AGENT_MODEL` to the exact `-cloud` name. Cloud-hosted models apply the JSON schema as a prompt hint rather than as constrained decoding, so their answers may arrive wrapped in a markdown fence; the adapter unwraps them before validating the fields.
@@ -114,9 +117,21 @@ The helper uses `OLLAMA_MODELS` when set, otherwise the standard user model fold
 
 ### What to expect from local inference
 
-Player requests take priority over queued background decisions. One local inference request runs at a time, with an 8,192-token context, bounded output, and thinking disabled. Residents display **Thinking…** while queued or generating.
+Player requests take priority over queued background decisions. One local inference request runs at a time, with a compact context (4,096 tokens by default), short output limits, and thinking disabled. Residents show **Queued for model** or **Generating reply** with a live wait timer.
 
-Direct tests with `gemma4:31b` produced warm responses in approximately **12–29 seconds** on the development machine; performance depends on your hardware and context length. Start at **1× speed** for slower inference.
+The defaults keep the model for work that needs it:
+
+- **Clear errands skip the model.** A strict local parser handles requests such as “Bring coffee to Elena then report back”, “Visit the park”, or “Organize a picnic” in under a millisecond. Anything with qualifiers or unknown wording still goes to your model. Task cards show whether local rules or the model interpreted a request.
+- **Routine schedules use local rules** unless `AGENT_ROUTINE_MODEL=on`.
+- **Semantic retrieval uses cached embeddings only** unless `AGENT_LIVE_EMBEDDINGS=on`, so a chat reply never waits for the embedding model to load.
+
+```dotenv
+AGENT_CONTEXT_SIZE=4096
+AGENT_ROUTINE_MODEL=off
+AGENT_LIVE_EMBEDDINGS=off
+```
+
+With these defaults, a warm `gemma4:31b` chat reply took about **8 seconds** on the development machine, down from about 17 seconds; a cold first call took about 40 seconds, mostly model loading ([latency report](docs/evaluation/local-latency.json)). Performance depends on your hardware. Start at **1× speed** for slower inference. The tools panel shows per-call load, prompt and generation timing.
 
 The UI shows requests, token usage, and errors. The request cap resets when the simulation server restarts. On a provider error, the adapter waits 30 seconds before retrying and uses demo fallbacks in the meantime. It never switches from Ollama to a cloud provider automatically.
 
@@ -133,7 +148,7 @@ AGENT_EMBEDDING_MODEL=embeddinggemma
 AGENT_MAX_EMBED_REQUESTS=500
 ```
 
-Restart after changing configuration. Embeddings run on the cognition worker, are cached in SQLite, and are never needed to move residents. The tools panel shows retrieval mode, embedding requests, tokens, queue depth, and per-resident operation latency. Missing or failed embeddings use lexical retrieval. Offline demo mode makes no model or embedding calls. See the [Ollama embed API](https://docs.ollama.com/api/embed).
+Restart after changing configuration. Embeddings run on the cognition worker, are cached in SQLite, and are never needed to move residents. By default retrieval is cache-only: it ranks semantically when every candidate is already embedded and otherwise uses lexical ranking without a network call. Set `AGENT_LIVE_EMBEDDINGS=on` to embed new memories on demand. The tools panel shows retrieval mode, embedding requests, tokens, queue depth, and per-resident operation latency. Missing or failed embeddings use lexical retrieval. Offline demo mode makes no model or embedding calls. See the [Ollama embed API](https://docs.ollama.com/api/embed).
 
 <details>
 <summary><strong>Optional OpenAI configuration</strong></summary>
@@ -164,6 +179,18 @@ The OpenAI adapter is covered by mocked tests; no credentialed OpenAI run has be
 
 Click walkable ground to move Alex. Drag to pan, scroll to zoom, and use **Recenter** to fit the map. Use the send button or **Ctrl+Enter**. Pause the town or select 1×, 2×, or 4× speed; at 1×, six simulated seconds pass per real second.
 
+## From garden to gathering
+
+Select a resident and press **Ask selected resident to organize a picnic**, or assign “Organize a picnic”. The host:
+
+1. Walks to another resident and asks for help. Someone with a task or commitment declines, and the host asks the next neighbor.
+2. Plants, waters, and harvests vegetables in their own garden bed. Crops ripen three simulated minutes after watering.
+3. Waits while the helper buys supplies at the market (3 credits) and hands them over in person.
+4. Cooks both ingredients into four servings at the cafe.
+5. Invites guests to the plaza and serves everyone who actually arrives.
+
+Seeds, market supplies, and credits are finite and saved with the town. **Rain** delays outdoor serving until the weather clears. Cancelling the picnic also cancels the helper's errand; the helper's errand cannot be paused on its own. You can also run the pieces separately: “Plant vegetables then water vegetables then harvest vegetables”, “Buy picnic supplies”, or “Prepare picnic food”.
+
 Close the cafe to see coffee requests become blocked; reopen it to allow retries. Each resident runs one assigned task at a time. **Pause task** releases them for another errand; **Resume** continues the saved steps and inventory when they are free. Fixed-time meeting requests can be cancelled but cannot be paused. Chat can suggest an errand, which remains proposed until you accept it.
 
 ## How it works
@@ -186,7 +213,9 @@ The browser renders interpolated snapshots with Canvas. A Python HTTP server sen
 client/                 Isometric renderer and interaction panels
 server/world.py         Simulation, navigation, conversations, and tasks
 server/roadmap.py       Task plans, interiors, meetings, replay, and transactions
+server/community.py     Gardens, market, cooking, weather, and cooperative picnics
 server/planning.py      Bounded task-plan interpretation
+server/performance.py   Local errand parser and compact model contexts
 server/memory.py        Worker-side embedding retrieval and cache
 server/scenario.py      Scenario validation and population generation
 server/model.py         Offline, Ollama, and OpenAI cognition adapters
@@ -200,7 +229,7 @@ IMPLEMENTATION_PLAN.md  Research analysis and development roadmap
 
 ### Saving and resuming
 
-Every simulation tick and accepted command saves its world changes, events, command receipt, and snapshot in one SQLite transaction at `data/neighborhood.sqlite3`. **Save town** saves immediately, and restarting resumes the saved world. Local settings and saves are excluded from Git.
+Every simulation tick and accepted command saves its world changes, events, command receipt, community resources, and snapshot in one SQLite transaction at `data/neighborhood.sqlite3`. **Save town** saves immediately, and restarting resumes the saved world. Local settings and saves are excluded from Git.
 
 For another town without changing your existing save:
 
@@ -234,9 +263,10 @@ node --check client/tools.js
 node tests/test-map-renderer.mjs
 node tools/inspect-assets.mjs
 python tools/evaluate.py --population 25 --output data/evaluation.json
+python tools/evaluate-community.py
 ```
 
-The **57 automated tests** cover the original simulation plus multi-step execution, invitation acceptance and attendance, interior visibility and object reservations, task reprioritization, semantic ranking and fallback, rollback, replay integrity, scenario validation, and resume. CI runs Python tests and checks browser syntax and asset metadata without contacting a live model.
+The **73 automated tests** cover the original simulation plus multi-step execution, invitation acceptance and attendance, interior visibility and object reservations, task reprioritization, semantic ranking and fallback, rollback, replay integrity, scenario validation, resume, the local errand parser, finite community resources, and the full picnic including helper refusal, rain, cancellation, and restart. CI runs Python tests and checks browser syntax and asset metadata without contacting a live model.
 
 Live Ollama tests passed for task interpretation, dialogue, activity selection, and reflection. Running-server checks also verified physical deliveries and restored saved progress.
 
