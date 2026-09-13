@@ -1,0 +1,49 @@
+{
+  "before": {
+    "reply": "I just love making my cafe a welcoming place for everyone in the neighborhood!",
+    "seconds": 17.002477000001818,
+    "tokens": 1211,
+    "model": "gemma4:31b"
+  },
+  "after_cold": {
+    "reply": "I just love making my cafe a welcoming place for everyone here!",
+    "seconds": 40.36640380002791,
+    "tokens": 344,
+    "timing": {
+      "seconds": 40.365,
+      "load": 30.843,
+      "prompt_eval": 2.725,
+      "eval": 6.758,
+      "generated_tokens": 20,
+      "tokens_per_second": 2.96
+    },
+    "model": "gemma4:31b"
+  },
+  "after_warm": [
+    {
+      "seconds": 8.065,
+      "reply": "I just love making my cafe a welcoming place for everyone here!",
+      "timing": {
+        "seconds": 8.064,
+        "load": 0.002,
+        "prompt_eval": 1.289,
+        "eval": 6.745,
+        "generated_tokens": 20,
+        "tokens_per_second": 2.96
+      }
+    },
+    {
+      "seconds": 7.9,
+      "reply": "I just love making my cafe a welcoming place for everyone here!",
+      "timing": {
+        "seconds": 7.9,
+        "load": 0.002,
+        "prompt_eval": 1.197,
+        "eval": 6.645,
+        "generated_tokens": 20,
+        "tokens_per_second": 3.01
+      }
+    }
+  ],
+  "fast_task_seconds": 0.0008294999715872109
+}

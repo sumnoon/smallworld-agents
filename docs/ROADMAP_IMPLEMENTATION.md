@@ -41,6 +41,14 @@ The new Canvas views were rendered from actual world snapshots and visually insp
 5. Enable speech, hear a new selected-resident line, dictate a message, review it, and send.
 6. Export a 25-resident scenario and start it using a new database.
 
+## Community and latency update
+
+- **Community actions.** Plant, water, harvest, buy, prepare and share are validated plan steps with finite seeds, market supplies and resident credits. Each completed action records world evidence, and resources are included in rollback, save and resume.
+- **Cooperative picnic.** The host recruits a free helper in person, grows and cooks food, receives the helper's supplies by physical handoff, invites guests, and serves only residents who attend. Rain blocks serving. Cancelling or failing the picnic cancels the helper's errand and scheduled appointment once; helper errands cannot be paused separately.
+- **Latency.** A strict local parser resolves clear errands without the model, routine choices default to local rules, retrieval defaults to cached embeddings, and model contexts are compacted to a 4,096-token default. In Ollama mode, player requests cancel queued background work before the queue-capacity check.
+- **Evidence.** 73 Python tests, the offline picnic report, a 25-resident community-map workload, and a small before/after `gemma4:31b` latency check. See [evaluation notes](evaluation/README.md).
+- **Limits.** Helper selection and guest acceptance are scheduling rules, not negotiation. Weather is a manual switch. There is one bed per resident and no crop failure, pricing changes or restocking.
+
 ## Map expansion update
 
 The default map is now 24 x 24 with four new destinations and four original transparent sprites. Nine new Python checks cover preservation of old collision geometry, district reachability, boardwalk navigation, natural-language district names, actual resident travel, travel out of an interior, map validation, save migration and asset metadata. A dependency-free JavaScript check verifies the district camera targets. There are 57 Python tests in total. The original map is retained as a separate scenario, and old custom maps are not automatically replaced.

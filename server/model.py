@@ -67,6 +67,7 @@ class Cognition:
         self.limit = max(1, int(os.getenv("AGENT_MAX_REQUESTS", "100")))
         self.calls = self.tokens = self.failures = 0
         self.last_error = ""
+        self.last_timing = {}
         self.retry_after = 0
         self.lock = threading.Lock()
         self.usage_local = threading.local()
@@ -85,7 +86,7 @@ class Cognition:
         with self.lock:
             return {"mode": self.mode, "model": self.model if self.mode != "demo" else "Offline rules",
                     "requests": self.calls, "request_limit": self.limit, "tokens": self.tokens,
-                    "failures": self.failures, "last_error": self.last_error}
+                    "failures": self.failures, "last_error": self.last_error, "last_timing": dict(self.last_timing)}
 
     def _call(self, purpose, context, schema):
         with self.lock:
@@ -103,12 +104,16 @@ class Cognition:
             "Plans are proposals, never completed facts. Be brief, natural and specific. "
             "The game engine enforces all actions. " + purpose
         )
-        messages = [{"role": "system", "content": system}, {"role": "user", "content": json.dumps(context)}]
+        from .performance import compact_context
+        context = compact_context(context, schema)
+        messages = [{"role": "system", "content": system}, {"role": "user", "content": json.dumps(context, separators=(",", ":"))}]
         if self.mode == "ollama":
-            messages[0]["content"] += " Return only JSON matching this schema: " + json.dumps(schema)
+            messages[0]["content"] += " Return only the requested JSON object."
+            if "cloud" in self.model:
+                messages[0]["content"] += json.dumps(schema, separators=(",", ":"))
             payload = {"model": self.model, "messages": messages, "stream": False, "think": False,
                        "format": schema, "keep_alive": "10m",
-                       "options": {"temperature": .3, "num_ctx": 8192, "num_predict": 1024 if "steps" in schema["properties"] else 384}}
+                       "options": {"temperature": .3, "num_ctx": max(2048, int(os.getenv("AGENT_CONTEXT_SIZE", "4096"))), "num_predict": 768 if "steps" in schema["properties"] else 160}}
             request = urllib.request.Request(self.ollama_url + "/api/chat", json.dumps(payload).encode(),
                                              {"Content-Type": "application/json"})
         else:
@@ -116,6 +121,7 @@ class Cognition:
                        "text": {"format": {"type": "json_schema", "name": "agent_result", "strict": True, "schema": schema}}}
             request = urllib.request.Request("https://api.openai.com/v1/responses", json.dumps(payload).encode(),
                                              {"Authorization": "Bearer " + self.key, "Content-Type": "application/json"})
+        began = time.monotonic()
         try:
             with urllib.request.urlopen(request, timeout=self.timeout) as response:
                 result = json.load(response)
@@ -124,6 +130,14 @@ class Cognition:
             self.usage_local.tokens = (result.get("prompt_eval_count", 0) + result.get("eval_count", 0)) if self.mode == "ollama" else result.get("usage", {}).get("total_tokens", 0)
             with self.lock:
                 self.tokens += (result.get("prompt_eval_count", 0) + result.get("eval_count", 0)) if self.mode == "ollama" else result.get("usage", {}).get("total_tokens", 0)
+            timing = {"seconds": round(time.monotonic()-began, 3)}
+            if self.mode == "ollama":
+                timing.update({key: round(result.get(key+"_duration", 0)/1e9, 3) for key in ("load", "prompt_eval", "eval")})
+                timing["generated_tokens"] = result.get("eval_count", 0)
+                timing["tokens_per_second"] = round(result.get("eval_count", 0)/max(.001, result.get("eval_duration", 0)/1e9), 2)
+            self.usage_local.timing = timing
+            with self.lock:
+                self.last_timing = timing
             if self.mode == "ollama":
                 if result.get("error"):
                     raise ModelError("Ollama rejected the request. Check the configured model and local server.")
@@ -208,7 +222,7 @@ class Cognition:
 
     def chat(self, context):
         if self.mode != "demo":
-            return self._call("Reply as this resident in one or two conversational sentences. Never claim task completion without evidence.", context, CHAT_SCHEMA)["utterance"][:360]
+            return self._call("Reply as this resident in one short conversational sentence, at most 30 words. Never claim task completion without evidence.", context, CHAT_SCHEMA)["utterance"][:360]
         text = context.get("message", "").lower()
         name = context["agent"]["name"]
         if any(w in text for w in ("remember", "earlier", "memory")):

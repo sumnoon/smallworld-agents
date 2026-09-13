@@ -4,6 +4,7 @@ import heapq
 import json
 import math
 import threading
+import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -187,27 +188,30 @@ class BaseWorld:
                 "residents": [{"id": b["id"], "name": b["name"]} for b in self.agents.values()],
                 "active_task": copy.deepcopy(self.tasks.get(a["task"])), **extra}
 
+    def yield_to_player(self, method, extra):
+        """Cancel queued background jobs so a player request waits for at most the current call."""
+        if self.cognition.mode != "ollama" or not (method == "task" or (method == "chat" and extra.get("other") == "visitor")):
+            return
+        for job in self.jobs:
+            if job["method"] == "task" or job.get("other") == "visitor" or job["future"].cancelled():
+                continue
+            if job["future"].cancel():
+                owner = self.agents[job["agent"]]
+                if owner["revision"] == job["revision"]:
+                    owner["thinking"] = False
+                    owner["next_decision"] = max(owner["next_decision"], self.time + 30)
+                    if job["method"] == "reflect":
+                        owner["next_reflect"] = self.time + 60
+                conv = self.conversations.get(job.get("conversation"))
+                if conv:
+                    conv["waiting"] = False
+                    conv["next_turn"] = self.time + 30
+
     def submit(self, method, a, context, **extra):
-        if self.cognition.mode == "ollama" and (method == "task" or (method == "chat" and extra.get("other") == "visitor")):
-            # A player request waits for at most the current background call,
-            # rather than sitting behind every resident in the local queue.
-            for job in self.jobs:
-                if job["method"] == "task" or job.get("other") == "visitor":
-                    continue
-                if job["future"].cancel():
-                    owner = self.agents[job["agent"]]
-                    if owner["revision"] == job["revision"]:
-                        owner["thinking"] = False
-                        owner["next_decision"] = max(owner["next_decision"], self.time + 30)
-                        if job["method"] == "reflect":
-                            owner["next_reflect"] = self.time + 60
-                    conv = self.conversations.get(job.get("conversation"))
-                    if conv:
-                        conv["waiting"] = False
-                        conv["next_turn"] = self.time + 30
+        self.yield_to_player(method, extra)
         a["thinking"] = True
         self.jobs.append({"future": self.pool.submit(self._cognition_job, method, context), "method": method,
-                          "agent": a["id"], "revision": a["revision"], "context": context, **extra})
+                          "agent": a["id"], "revision": a["revision"], "context": context, "queued_at":time.monotonic(), **extra})
 
     def _jobs(self):
         pending = []
@@ -225,11 +229,17 @@ class BaseWorld:
                 result = self.consume_result(job, job["future"].result())
             except Exception:
                 self.event(a["id"], "model_fallback", f"{a['name']} is using a demo fallback because the model could not respond.")
-                result = getattr(self.fallback, job["method"])(job["context"])
+                if job["method"] == "task":
+                    from .performance import fast_task
+                    result = fast_task(job["context"]) or {"kind":"unsupported", "reply":"The model could not interpret this request. Please try a specific supported action."}
+                else:
+                    result = getattr(self.fallback, job["method"])(job["context"])
+                job["source"] = "demo_fallback"
                 self.storage.decision(self.time,a["id"],job["method"],{"mode":"demo_fallback","result":result})
             try:
                 if job["method"] == "task":
-                    self.create_task(a["id"], job["context"]["request"], result)
+                    task = self.create_task(a["id"], job["context"]["request"], result)
+                    task["interpretation"] = job.get("source",self.cognition.mode)
                 elif job["method"] == "chat":
                     other = job.get("other", "visitor")
                     if other == "visitor" and not job.get("conversation"):
@@ -365,6 +375,9 @@ class BaseWorld:
         if self.time >= task["next_repath"]:
             a["path"] = []
             task["next_repath"] = self.time + 12
+        if known and distance(a, known) <= 1 and not self.visible(a,target):
+            a["known_positions"].pop(target["id"],None)
+            known = None
         if known and distance(a, known) > 1:
             self.go(a, known, f"Looking for {target['name']}")
         else:
@@ -703,11 +716,14 @@ class BaseWorld:
                     "relationships": dict(a["relationships"]), "retrieved": a["retrieved"], "known_positions": copy.deepcopy(a["known_positions"]),
                     "dialogue": self.storage.dialogue(aid)}
 
+    def save_state(self):
+        return {"time": self.time, "agents": self.agents, "tasks": self.tasks, "stock": self.stock,
+                "cafe_open": self.cafe_open, "paused": self.paused, "speed": self.speed}
+
     def save(self):
         with self.lock:
             self.last_saved = self.time
-            self.storage.save({"time": self.time, "agents": self.agents, "tasks": self.tasks, "stock": self.stock,
-                               "cafe_open": self.cafe_open, "paused": self.paused, "speed": self.speed})
+            self.storage.save(self.save_state())
 
     def close(self):
         self.pool.shutdown(wait=True, cancel_futures=True)
@@ -717,7 +733,8 @@ class BaseWorld:
 
 
 from .roadmap import RoadmapMixin
+from .community import CommunityMixin
 
 
-class World(RoadmapMixin, BaseWorld):
+class World(CommunityMixin, RoadmapMixin, BaseWorld):
     """Public simulation with the roadmap capabilities enabled."""

@@ -115,7 +115,7 @@ class Storage:
         raw = json.dumps(state, sort_keys=True, separators=(",", ":")).encode()
         self.db.execute("INSERT INTO replay_frames(time,digest,data) VALUES(?,?,?)",
                         (state["time"], hashlib.sha256(raw).hexdigest(), zlib.compress(raw)))
-        # Roughly two hours at one sample per second; bounded disk usage.
+        # Keep the newest 7,201 frames (one per six simulated seconds plus commands); bounded disk usage.
         self.db.execute("DELETE FROM replay_frames WHERE id < (SELECT MAX(id)-7200 FROM replay_frames)")
         self.flush()
 

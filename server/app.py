@@ -19,7 +19,7 @@ def load_environment():
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
                 name, value = line.split("=", 1)
-                if name.strip() in ("AGENT_PROVIDER", "AGENT_MODEL", "OPENAI_API_KEY", "AGENT_MAX_REQUESTS", "OLLAMA_BASE_URL", "AGENT_MODEL_TIMEOUT", "AGENT_EMBEDDING_MODEL", "AGENT_MEMORY_RETRIEVAL", "AGENT_REFLECTIONS", "AGENT_MAX_EMBED_REQUESTS"):
+                if name.strip() in ("AGENT_PROVIDER", "AGENT_MODEL", "OPENAI_API_KEY", "AGENT_MAX_REQUESTS", "OLLAMA_BASE_URL", "AGENT_MODEL_TIMEOUT", "AGENT_EMBEDDING_MODEL", "AGENT_MEMORY_RETRIEVAL", "AGENT_REFLECTIONS", "AGENT_MAX_EMBED_REQUESTS", "AGENT_CONTEXT_SIZE", "AGENT_ROUTINE_MODEL", "AGENT_LIVE_EMBEDDINGS"):
                     os.environ.setdefault(name.strip(), value.strip().strip("\"'"))
 
 
@@ -154,14 +154,11 @@ def run(port=8766, database=None, scenario=None, residents=None):
 
     def clock():
         last = time.monotonic()
-        save_at = last + 5
         while not server.stopping.wait(.1):
             now = time.monotonic()
             try:
+                # Each tick and command already saves inside its own transaction.
                 world.tick(now - last)
-                if now >= save_at:
-                    world.save()
-                    save_at = now + 5
             except Exception as exc:
                 # Keep the interface reachable so a runtime failure is visible.
                 with world.lock:

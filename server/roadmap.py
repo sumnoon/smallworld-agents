@@ -7,6 +7,9 @@ import os
 import time
 import uuid
 from contextlib import contextmanager
+from concurrent.futures import Future
+from .performance import fast_task
+from .community import initial_community
 from pathlib import Path
 from .memory import SemanticMemory
 from .maps import obstacle_cells, upgrade_classic
@@ -17,6 +20,7 @@ FINISHED = {"completed", "failed", "cancelled", "declined"}
 
 class RoadmapMixin:
     def __init__(self, database=":memory:", cognition=None, restore=True, scenario=None, residents=None):
+        self.community = initial_community()
         self.semantic = SemanticMemory()
         self.metrics = {}
         self.appointments = {}
@@ -32,10 +36,12 @@ class RoadmapMixin:
         self.layout["interiors"] = interiors()
         saved = self.storage.load() if restore else None
         if saved:
+            self.community = saved.get("community", self.community)
             self.appointments = saved.get("appointments", {})
             self.leases = saved.get("leases", {})
             self.proposals = saved.get("proposals", {})
         for a in self.agents.values():
+            a.setdefault("credits", 25)
             a.setdefault("room", "")
             a.setdefault("skin", a["id"])
             a.setdefault("last_reflection", self.time)
@@ -76,27 +82,29 @@ class RoadmapMixin:
 
     def _cognition_job(self, method, context):
         began = time.monotonic()
-        context = self.semantic.rank(copy.deepcopy(context))
+        context = copy.deepcopy(context)
+        if method in ("chat", "reflect"):
+            context = self.semantic.rank(context, allow_network=os.getenv("AGENT_LIVE_EMBEDDINGS", "off") == "on")
+        else:
+            context["memories"] = []
         self.cognition.usage_local.tokens = 0
         result = getattr(self.cognition, method)(context)
         return {"_cognition_result": result,"memories":context["memories"],"latency":time.monotonic()-began,
-                "tokens":self.cognition.usage_local.tokens}
+                "tokens":self.cognition.usage_local.tokens,"source":self.cognition.mode,
+                "timing":getattr(self.cognition.usage_local,"timing",{})}
 
     def submit(self, method, a, context, **extra):
-        priority = method == "task" or (method == "chat" and extra.get("other") == "visitor")
-        if priority and self.cognition.mode == "ollama":
-            for job in self.jobs:
-                if job["method"] == "task" or job.get("other") == "visitor":
-                    continue
-                if job["future"].cancel():
-                    owner = self.agents[job["agent"]]
-                    if owner["revision"] == job["revision"]:
-                        owner["thinking"] = False
-                        owner["next_decision"] = self.time+30
-                    conv = self.conversations.get(job.get("conversation"))
-                    if conv:
-                        conv["waiting"] = False
-                        conv["next_turn"] = self.time+30
+        local = fast_task(context) if method == "task" else None
+        if method == "decide" and os.getenv("AGENT_ROUTINE_MODEL", "off") != "on":
+            local = self.fallback.decide(context)
+        if local is not None:
+            future = Future()
+            future.set_result({"_cognition_result":local,"memories":[],"latency":0,"tokens":0,"source":"local_rules","timing":{}})
+            a["thinking"] = True
+            self.jobs.append({"future":future,"method":method,"agent":a["id"],"revision":a["revision"],"context":context,**extra})
+            return True
+        # Free queue slots before the capacity check; the base submit repeats this harmlessly.
+        self.yield_to_player(method, extra)
         active = sum(not j["future"].done() for j in self.jobs)
         if active >= 8 and method in ("decide", "reflect"):
             a["next_decision"] = self.time+30
@@ -120,10 +128,14 @@ class RoadmapMixin:
             metric["calls"] += 1
             metric["seconds"] += result["latency"]
             metric["tokens"] += result["tokens"]
+            metric["last_source"] = result.get("source", self.cognition.mode)
+            metric["last_seconds"] = result["latency"]
+            metric["timing"] = result.get("timing", {})
+            job["source"] = metric["last_source"]
             result = result["_cognition_result"]
-        self.storage.db.executemany("INSERT OR REPLACE INTO embeddings VALUES(?,?)",[(k,json.dumps(v)) for k,v in list(self.semantic.cache.items())])
+        self.storage.db.executemany("INSERT OR REPLACE INTO embeddings VALUES(?,?)",[(k,json.dumps(v)) for k,v in self.semantic.drain_dirty()])
         self.storage.decision(self.time,job["agent"],job["method"],{"model":self.cognition.model,"mode":self.cognition.mode,
-            "result":result,"memory_ids":[m["id"] for m in job["context"].get("memories",[])],"revision":job["revision"]})
+            "source":job.get("source",self.cognition.mode),"result":result,"memory_ids":[m["id"] for m in job["context"].get("memories",[])],"revision":job["revision"]})
         return result
 
     def reflection_due(self, a):
@@ -395,7 +407,7 @@ class RoadmapMixin:
 
     @contextmanager
     def atomic(self):
-        fields = ("agents","tasks","stock","time","conversations","pending_interaction","appointments","leases","proposals","paused","speed","cafe_open","last_saved","last_frame","next_social")
+        fields = ("agents","tasks","stock","time","conversations","pending_interaction","appointments","leases","proposals","paused","speed","cafe_open","last_saved","last_frame","next_social","community")
         with self.lock, self.storage.transaction():
             before = {key:copy.deepcopy(getattr(self,key)) for key in fields}
             previous_jobs = list(self.jobs)
@@ -420,6 +432,9 @@ class RoadmapMixin:
         with self.atomic():
             if self.paused:
                 return
+            for task in self.tasks.values():
+                if task["status"] in ("failed","cancelled") and task.get("picnic") and not task["picnic"].get("cleaned"):
+                    self.cleanup_picnic(task)
             self.appointment_tick()
             super().tick(dt)
             self.save()
@@ -437,7 +452,12 @@ class RoadmapMixin:
                 return prior
             kind = data.get("kind")
             result = {"ok":True}
-            if kind in ("suspend_task","resume_task"):
+            if kind == "weather":
+                if data.get("weather") not in ("clear","rain"):
+                    raise CommandError("Choose clear or rain")
+                self.community["weather"] = data["weather"]
+                self.event("visitor","weather_changed","Weather changed to "+data["weather"])
+            elif kind in ("suspend_task","resume_task"):
                 task = self.tasks.get(data.get("task"))
                 if not task or task["status"] in FINISHED:
                     raise CommandError("That task is no longer active")
@@ -445,8 +465,10 @@ class RoadmapMixin:
                 if kind == "suspend_task":
                     if task["status"]=="paused" or a["task"] != task["id"]:
                         raise CommandError("That task is already paused")
-                    if task["kind"] == "invite":
+                    if task["kind"] in ("invite","picnic"):
                         raise CommandError("Meetings have a fixed appointment time; cancel this request to release the commitment")
+                    if task.get("parent"):
+                        raise CommandError("This errand supports a picnic; cancel it or the picnic instead of pausing")
                     if a["conversation"]:
                         self.conversations[a["conversation"]]["task"] = None
                     self._interrupt(a)
@@ -460,7 +482,7 @@ class RoadmapMixin:
                         raise CommandError("Finish or pause the current task before resuming this one")
                     self._interrupt(a)
                     elapsed = self.time-task.pop("paused_at",self.time)
-                    for key in ("deadline","until","object_until","collect_until"):
+                    for key in ("deadline","until","object_until","collect_until","work_until"):
                         if key in task:
                             task[key] += elapsed
                     task.update(status="accepted",next_repath=0)
@@ -526,6 +548,8 @@ class RoadmapMixin:
                 for oid,lease in list(self.leases.items()):
                     if lease["agent"] == self.tasks[data["task"]]["agent"]:
                         self.leases.pop(oid,None)
+            if kind == "cancel":
+                self.cleanup_picnic(self.tasks[data["task"]])
             self.storage.decision(self.time,"visitor","command",data)
             self.storage.remember_command(cid,result)
             self.save()
@@ -550,6 +574,14 @@ class RoadmapMixin:
         state = super().snapshot()
         for a in state["agents"]:
             a.update(room=self.agents[a["id"]].get("room",""),skin=self.agents[a["id"]].get("skin",a["id"]))
+        state["community"] = copy.deepcopy(self.community)
+        for a in state["agents"]:
+            original = self.agents[a["id"]]
+            a["credits"] = original.get("credits",25)
+            a["working"] = copy.deepcopy(original.get("working"))
+            job = next((j for j in self.jobs if j["agent"]==a["id"] and j["revision"]==original["revision"] and not j["future"].done()),None)
+            a["waiting_seconds"] = round(time.monotonic()-job.get("queued_at",time.monotonic())) if job else 0
+            a["cognition_stage"] = ("Generating reply" if job["future"].running() else "Queued for model") if job else ""
         state.update(proposals=copy.deepcopy(list(self.proposals.values())[-20:]),appointments=copy.deepcopy(list(self.appointments.values())),objects=copy.deepcopy(self.leases),
             memory=self.semantic.status(),metrics=copy.deepcopy(self.metrics),queue=sum(not j["future"].done() for j in self.jobs))
         return state
@@ -564,9 +596,5 @@ class RoadmapMixin:
             m["confidence"] = "inference" if m["kind"]=="reflection" else "reported statement" if m["kind"] in ("conversation","reported") else "direct record"
         return detail
 
-    def save(self):
-        with self.lock:
-            super().save()
-            saved = self.storage.load()
-            saved.update(appointments=self.appointments,layout=self.layout,leases=self.leases,proposals=self.proposals)
-            self.storage.save(saved)
+    def save_state(self):
+        return {**super().save_state(),"community":self.community,"appointments":self.appointments,"layout":self.layout,"leases":self.leases,"proposals":self.proposals}

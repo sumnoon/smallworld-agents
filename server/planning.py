@@ -2,16 +2,21 @@
 import re
 from .model import object_schema, TEXT, normalize_place_names
 
-STEP = object_schema({"kind":{"type":"string","enum":["deliver","visit","meet","wait","report","use","inspect","invite","unsupported"]},
+STEP = object_schema({"kind":{"type":"string","enum":["deliver","visit","meet","wait","report","use","inspect","invite","plant","water","harvest","buy","prepare","share","picnic","unsupported"]},
     "recipient":TEXT,"place":TEXT,"item":TEXT,"minutes":{"type":"integer"},"guests":{"type":"array","items":TEXT},"at":{"type":"integer"}})
 PLAN = object_schema({"steps":{"type":"array","items":STEP},"reply":TEXT})
 
 
 def interpret(model, context):
+    from .performance import fast_task
+    parsed = fast_task(context)
+    if parsed is not None:
+        return parsed
     if model.mode != "demo":
         result = model._call("Translate the request into 1-6 ordered executable steps. Each step depends on the previous one. "
             "Use exact supplied resident/place/object IDs. Supported: deliver coffee/parcel, visit, meet, wait 1-30 minutes, report back to visitor, "
             "use or inspect an interior object (item = object ID, place = room), invite named guests to a place at a future time. "
+            "Also supported: plant/water/harvest vegetables at garden, buy picnic supplies at market, prepare picnic food at cafe, share supplies/vegetables with a recipient, or picnic (organize a cooperative picnic). "
             "Invite at is an absolute simulated timestamp in seconds; consider context.time. Invitation acceptance and attendance are separate world outcomes. "
             "Unused strings empty, arrays empty, integers zero. Unsupported or ambiguous requests return one unsupported step and a clarification reply. "
             "Do not invent capabilities or accept unspecified recipients. The world validates every step.", context, PLAN)
