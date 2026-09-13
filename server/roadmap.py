@@ -4,6 +4,7 @@ import json
 import hashlib
 import math
 import os
+import pickle
 import time
 import uuid
 from contextlib import contextmanager
@@ -16,6 +17,9 @@ from .maps import obstacle_cells, upgrade_classic
 from .scenario import validate, populate, interiors
 
 FINISHED = {"completed", "failed", "cancelled", "declined"}
+# Finished tasks leave live state after two simulated hours; the newest 30 stay for the task list.
+ARCHIVE_AFTER = 7200
+KEEP_RECENT_TASKS = 30
 
 
 class RoadmapMixin:
@@ -27,6 +31,7 @@ class RoadmapMixin:
         self.proposals = {}
         self.leases = {}
         self.last_frame = -1
+        self.next_archive = 0
         self.reflections_enabled = os.getenv("AGENT_REFLECTIONS", "on") != "off"
         self.scenario_input = scenario
         self.population = residents
@@ -141,8 +146,7 @@ class RoadmapMixin:
     def reflection_due(self, a):
         if not self.reflections_enabled:
             return False
-        memories = self.storage.memories(a["id"],120)
-        return sum(m["importance"] for m in memories if m["created"] > a.get("last_reflection",0) and m["kind"] not in ("identity","reflection")) >= 30
+        return self.storage.importance_since(a["id"],a.get("last_reflection",0)) >= 30
 
     def validate_step(self, aid, step):
         from .world import CommandError
@@ -407,13 +411,15 @@ class RoadmapMixin:
 
     @contextmanager
     def atomic(self):
-        fields = ("agents","tasks","stock","time","conversations","pending_interaction","appointments","leases","proposals","paused","speed","cafe_open","last_saved","last_frame","next_social","community")
+        fields = ("agents","tasks","stock","time","conversations","pending_interaction","appointments","leases","proposals","paused","speed","cafe_open","last_saved","last_frame","next_social","next_archive","community")
         with self.lock, self.storage.transaction():
-            before = {key:copy.deepcopy(getattr(self,key)) for key in fields}
+            # Pickling the plain-data state is an exact deep copy and much faster than copy.deepcopy.
+            saved = pickle.dumps({key:getattr(self,key) for key in fields}, pickle.HIGHEST_PROTOCOL)
             previous_jobs = list(self.jobs)
             try:
                 yield
             except BaseException:
+                before = pickle.loads(saved)
                 changed = any(getattr(self,key) != value for key,value in before.items()) or self.jobs != previous_jobs
                 if changed:
                     for key,value in before.items():
@@ -428,6 +434,29 @@ class RoadmapMixin:
                     self.jobs = []
                 raise
 
+    def archive_tasks(self):
+        """Move long-finished tasks to SQLite so per-tick copies and saves stay bounded."""
+        if self.time < self.next_archive:
+            return
+        self.next_archive = self.time + 60
+        recent = set(list(self.tasks)[-KEEP_RECENT_TASKS:])
+        held = {a["task"] for a in self.agents.values()}
+        old = []
+        for tid, task in self.tasks.items():
+            if task["status"] not in FINISHED:
+                continue
+            task.setdefault("finished_at", self.time)
+            parent = self.tasks.get(task.get("parent"))
+            if (tid in recent or tid in held or self.time - task["finished_at"] < ARCHIVE_AFTER
+                    or (parent and parent["status"] not in FINISHED)
+                    or (task.get("picnic") and task["status"] in ("failed","cancelled") and not task["picnic"].get("cleaned"))):
+                continue
+            old.append(task)
+        if old:
+            self.storage.archive_tasks(old)
+            for task in old:
+                del self.tasks[task["id"]]
+
     def tick(self, dt):
         with self.atomic():
             if self.paused:
@@ -437,6 +466,7 @@ class RoadmapMixin:
                     self.cleanup_picnic(task)
             self.appointment_tick()
             super().tick(dt)
+            self.archive_tasks()
             self.save()
             if self.time-self.last_frame >= 6:
                 self.record()

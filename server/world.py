@@ -15,6 +15,7 @@ from .maps import obstacle_cells
 
 ROOT = Path(__file__).resolve().parents[1]
 TERMINAL = {"completed", "failed", "cancelled", "declined"}
+NEIGHBORS = tuple((dx, dy, math.hypot(dx, dy)) for dx in (-1, 0, 1) for dy in (-1, 0, 1) if dx or dy)
 
 
 def distance(a, b):
@@ -123,46 +124,57 @@ class BaseWorld:
         prefix = [{"x": start[0], "y": start[1]}] if math.dist((actor["x"], actor["y"]), start) > .01 else []
         if start == end:
             return prefix
-        frontier = [(0, start)]
+        # Same search order and results as checking self.valid per neighbor, without the per-cell calls.
+        size = self.layout["size"]
+        closed = self.blocked | extra
+        frontier = [(0, start, 0)]
         cost, parent = {start: 0}, {}
         while frontier:
-            _, pos = heapq.heappop(frontier)
+            _, pos, g = heapq.heappop(frontier)
+            if g > cost[pos]:
+                continue  # Stale entry: its neighbors were already relaxed from a cheaper cost.
             if pos == end:
                 path = []
                 while pos != start:
                     path.append({"x": pos[0], "y": pos[1]})
                     pos = parent[pos]
                 return prefix + list(reversed(path))
-            for dx in (-1, 0, 1):
-                for dy in (-1, 0, 1):
-                    if not (dx or dy):
-                        continue
-                    nxt = pos[0] + dx, pos[1] + dy
-                    if not self.valid(*nxt, extra):
-                        continue
-                    if dx and dy and (not self.valid(pos[0] + dx, pos[1], extra) or not self.valid(pos[0], pos[1] + dy, extra)):
-                        continue
-                    new = cost[pos] + math.hypot(dx, dy)
-                    if new < cost.get(nxt, math.inf):
-                        cost[nxt], parent[nxt] = new, pos
-                        heapq.heappush(frontier, (new + math.dist(nxt, end), nxt))
+            x, y = pos
+            for dx, dy, step in NEIGHBORS:
+                nxt = x + dx, y + dy
+                if not (0 <= nxt[0] < size and 0 <= nxt[1] < size) or nxt in closed:
+                    continue
+                if dx and dy and ((nxt[0], y) in closed or (x, nxt[1]) in closed):
+                    continue
+                new = g + step
+                if new < cost.get(nxt, math.inf):
+                    cost[nxt], parent[nxt] = new, pos
+                    heapq.heappush(frontier, (new + math.dist(nxt, end), nxt, new))
         return None
 
+    def view_blockers(self):
+        """Cells that block sight; rebuilt only when the layout's geometry lists are replaced."""
+        buildings, landmarks = self.layout["buildings"], self.layout.get("landmarks") or ()
+        cached = getattr(self, "_view_cache", None)
+        if cached is None or cached[0] is not buildings or cached[1] is not landmarks:
+            cells = {(x, y) for b in buildings for x in range(b["x"] - 2, b["x"] + 2) for y in range(b["y"] - 2, b["y"] + 2)}
+            for landmark in landmarks:
+                if landmark.get("blocks_view"):
+                    x0, y0, x1, y1 = landmark["footprint"]
+                    cells.update((x, y) for x in range(x0, x1 + 1) for y in range(y0, y1 + 1))
+            cached = self._view_cache = (buildings, landmarks, frozenset(cells))
+        return cached[2]
+
     def visible(self, a, b, radius=4):
-        if distance(a, b) > radius:
+        d = distance(a, b)
+        if d > radius:
             return False
-        steps = max(1, math.ceil(distance(a, b) * 4))
+        # World geometry blocks perception; decorative props do not block sight.
+        blockers = self.view_blockers()
+        steps = max(1, math.ceil(d * 4))
         for i in range(1, steps):
-            x = round(a["x"] + (b["x"] - a["x"]) * i / steps)
-            y = round(a["y"] + (b["y"] - a["y"]) * i / steps)
-            # World geometry blocks perception; decorative props do not block sight.
-            for building in self.layout["buildings"]:
-                if building["x"] - 2 <= x <= building["x"] + 1 and building["y"] - 2 <= y <= building["y"] + 1:
-                    return False
-            for landmark in self.layout.get("landmarks",[]):
-                x0,y0,x1,y1 = landmark["footprint"]
-                if landmark.get("blocks_view") and x0<=x<=x1 and y0<=y<=y1:
-                    return False
+            if (round(a["x"] + (b["x"] - a["x"]) * i / steps), round(a["y"] + (b["y"] - a["y"]) * i / steps)) in blockers:
+                return False
         return True
 
     def observe(self):

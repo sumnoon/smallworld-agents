@@ -35,6 +35,7 @@ jobs:
           node --check client/tools.js
           node --check tools/render-roadmap.mjs
           node --check tools/render-expansion.mjs
+          node --check tools/render-community.mjs
           node tests/test-map-renderer.mjs
           node --check asset-preview.js
           node --check tools/video/render_intro.mjs

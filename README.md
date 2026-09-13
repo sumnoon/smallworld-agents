@@ -266,7 +266,7 @@ python tools/evaluate.py --population 25 --output data/evaluation.json
 python tools/evaluate-community.py
 ```
 
-The **73 automated tests** cover the original simulation plus multi-step execution, invitation acceptance and attendance, interior visibility and object reservations, task reprioritization, semantic ranking and fallback, rollback, replay integrity, scenario validation, resume, the local errand parser, finite community resources, and the full picnic including helper refusal, rain, cancellation, and restart. CI runs Python tests and checks browser syntax and asset metadata without contacting a live model.
+The **80 automated tests** cover the original simulation plus multi-step execution, invitation acceptance and attendance, interior visibility and object reservations, task reprioritization, semantic ranking and fallback, rollback, replay integrity, scenario validation, resume, the local errand parser, finite community resources, and the full picnic including helper refusal, rain, cancellation, and restart. CI runs Python tests and checks browser syntax and asset metadata without contacting a live model.
 
 Live Ollama tests passed for task interpretation, dialogue, activity selection, and reflection. Running-server checks also verified physical deliveries and restored saved progress.
 
@@ -297,7 +297,7 @@ Additional residents have distinct names and roles and reuse the five original r
 
 The playable roadmap features are implemented in the current Canvas/Python stack. See [implementation status and limits](docs/ROADMAP_IMPLEMENTATION.md) for the acceptance matrix and [evaluation results](docs/evaluation/README.md) for reproducible commands and measurements.
 
-The expanded 24 x 24 map also passed a 25-resident workload: no overlaps, unique inventory, and a completed delivery/report task across 1,200 updates; its measured p95 simulation update was about **27 ms**. See [the expanded-map report](docs/evaluation/expanded-map-25.json).
+The expanded 24 x 24 map also passed a 25-resident workload: no overlaps, unique inventory, and a completed delivery/report task across 1,200 updates; its measured p95 simulation update was about **27 ms**. See [the expanded-map report](docs/evaluation/expanded-map-25.json). Faster pathfinding and lighter per-update bookkeeping later cut the p95 from about 40 ms to 15–23 ms in side-by-side runs on the same machine ([tick performance notes](docs/evaluation/README.md#tick-performance)).
 
 The earlier 16 x 16, 25-resident offline workload completed the coffee-and-report plan, preserved inventory uniqueness, and detected no overlaps across 1,200 updates. Its measured 95th-percentile update time was approximately **17 ms** on the development machine. A live `gemma4:31b` call produced the expected two-step plan in **82 seconds**, and a live `embeddinggemma` query retrieved the matching gardening memory. These are engineering checks, not a reproduction of the paper's experiments.
 
