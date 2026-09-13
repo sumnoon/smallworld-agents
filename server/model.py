@@ -24,6 +24,12 @@ CHAT_SCHEMA = object_schema({"utterance": TEXT})
 REFLECTION_SCHEMA = object_schema({"insight": TEXT, "memory_ids": {"type": "array", "items": {"type": "integer"}}})
 
 
+def normalize_place_names(text):
+    for phrase, place in (("fountain square","plaza"),("the fountain","the plaza"),("blossom gardens","garden"),("conservatory","garden"),("market lane","market"),("farmers market","market"),("boardwalk","waterfront")):
+        text = re.sub(r"\b"+re.escape(phrase)+r"\b",place,text)
+    return text
+
+
 class ModelError(Exception):
     pass
 
@@ -183,7 +189,7 @@ class Cognition:
                 "The world engine checks stock, availability, and reachability during execution. "
                 "Empty unused fields; minutes 0 when unused.",
                 context, TASK_SCHEMA)
-        text = context["request"].lower()
+        text = normalize_place_names(context["request"].lower())
         recipient = next((p["id"] for p in context["residents"] if re.search(r"\b" + re.escape(p["name"].lower()) + r"\b", text)), "")
         place = next((p for p in context["places"] if p in text), "")
         result = {"kind": "unsupported", "recipient": recipient, "place": place, "item": "", "minutes": 0,

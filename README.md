@@ -22,7 +22,7 @@ Inspired by [Generative Agents: Interactive Simulacra of Human Behavior](https:/
 
 | Feature | In the town |
 | --- | --- |
-| Explore | Eight-direction walking, isometric depth, camera pan and zoom |
+| Explore | A 24 x 24 neighborhood with five districts, connected paths, a boardwalk, and district camera shortcuts |
 | Meet residents | Five original residents, expandable to 25 with roles, routines, needs, and relationships |
 | Talk | Proximity conversations, speech bubbles, and persistent conversation history |
 | Assign errands | Up to six ordered steps: deliver, visit, meet, wait, report, inspect, use, and invite |
@@ -36,6 +36,23 @@ Inspired by [Generative Agents: Interactive Simulacra of Human Behavior](https:/
 | Choose cognition | Offline demo, local Ollama, or an optional OpenAI adapter |
 
 **Delivery means delivery.** The resident must collect an item, find its recipient, and transfer it at close range. A language-model reply alone cannot mark the task complete.
+
+## A bigger, brighter neighborhood
+
+![The expanded Smallworld neighborhood](docs/media/expanded-town.png)
+
+The map now has **576 tiles**, up from 256, with four new destinations around the original village:
+
+- **Market Lane:** a coral-striped produce pavilion and a terracotta pedestrian street.
+- **Blossom Gardens:** a teal conservatory, flowering trees, and garden paths.
+- **Fountain Square:** a turquoise fountain, cobblestones, and benches.
+- **Waterfront:** a pond and a walkable wooden boardwalk.
+
+Choose a district above the map to focus the camera, then use **Walk to...** to send Alex there. **Find selected resident** brings a resident back into view. Try assigning **Visit Fountain Square**, **Visit the conservatory**, or **Walk to the boardwalk**. Residents' default routines also include the new destinations.
+
+The unchanged original 16 x 16 save layout upgrades on restart while retaining resident positions, tasks, memories, and inventory. Custom layouts are left intact. The original map remains available at `scenarios/classic-neighborhood.json`. New landmark buildings are exterior scenery; the existing four interiors remain available.
+
+[Original expansion artwork and prompts](assets/expansion/README.md)
 
 ## Quick start
 
@@ -195,7 +212,7 @@ Open **Playback, meetings & town tools** to browse recordings. Playback pauses t
 
 ## Original artwork
 
-All artwork was created for this project: AI-generated raster sprite sheets and authored SVG interface icons. The pack includes **six character sheets, 16 terrain tiles, four building exteriors, 16 props, and eight icons**—236 source frames/icons in total.
+All artwork was created for this project: AI-generated raster sprite sheets and authored SVG interface icons. The pack includes **six character sheets, 16 terrain tiles, four building exteriors, 16 props, and eight icons**—236 base frames/icons, plus four new expansion sprites (240 total).
 
 Generation prompts, measured sprite rectangles, anchors, and facing corrections are retained under `assets/`. Final sheets have verified transparency. See the [asset notes](assets/README.md) for production details and known animation limitations.
 
@@ -214,11 +231,12 @@ python -m unittest discover -s tests -v
 node --check client/app.js
 node --check client/renderer.js
 node --check client/tools.js
+node tests/test-map-renderer.mjs
 node tools/inspect-assets.mjs
 python tools/evaluate.py --population 25 --output data/evaluation.json
 ```
 
-The **48 automated tests** cover the original simulation plus multi-step execution, invitation acceptance and attendance, interior visibility and object reservations, task reprioritization, semantic ranking and fallback, rollback, replay integrity, scenario validation, and resume. CI runs Python tests and checks browser syntax and asset metadata without contacting a live model.
+The **57 automated tests** cover the original simulation plus multi-step execution, invitation acceptance and attendance, interior visibility and object reservations, task reprioritization, semantic ranking and fallback, rollback, replay integrity, scenario validation, and resume. CI runs Python tests and checks browser syntax and asset metadata without contacting a live model.
 
 Live Ollama tests passed for task interpretation, dialogue, activity selection, and reflection. Running-server checks also verified physical deliveries and restored saved progress.
 
@@ -249,7 +267,9 @@ Additional residents have distinct names and roles and reuse the five original r
 
 The playable roadmap features are implemented in the current Canvas/Python stack. See [implementation status and limits](docs/ROADMAP_IMPLEMENTATION.md) for the acceptance matrix and [evaluation results](docs/evaluation/README.md) for reproducible commands and measurements.
 
-The 25-resident offline workload completed the coffee-and-report plan, preserved inventory uniqueness, and detected no overlaps across 1,200 updates. Its measured 95th-percentile update time was approximately **17 ms** on the development machine. A live `gemma4:31b` call produced the expected two-step plan in **82 seconds**, and a live `embeddinggemma` query retrieved the matching gardening memory. These are engineering checks, not a reproduction of the paper's experiments.
+The expanded 24 x 24 map also passed a 25-resident workload: no overlaps, unique inventory, and a completed delivery/report task across 1,200 updates; its measured p95 simulation update was about **27 ms**. See [the expanded-map report](docs/evaluation/expanded-map-25.json).
+
+The earlier 16 x 16, 25-resident offline workload completed the coffee-and-report plan, preserved inventory uniqueness, and detected no overlaps across 1,200 updates. Its measured 95th-percentile update time was approximately **17 ms** on the development machine. A live `gemma4:31b` call produced the expected two-step plan in **82 seconds**, and a live `embeddinggemma` query retrieved the matching gardening memory. These are engineering checks, not a reproduction of the paper's experiments.
 
 Current limits: one navigable ground level, fixed camera orientation, six original character sheets, rule-based invitation acceptance based on commitments, bounded recorded-state replay, and no external software execution or multiplayer. A human-rated persona/believability study remains outstanding. Browser automation was unavailable during this update; Canvas scenes were rendered and inspected directly, while speech permissions and full browser interactions still need a manual pass.
 

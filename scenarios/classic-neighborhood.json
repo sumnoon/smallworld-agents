@@ -1,0 +1,258 @@
+{
+  "size": 16,
+  "buildings": [
+    {
+      "id": "cafe",
+      "x": 3,
+      "y": 4,
+      "index": 0
+    },
+    {
+      "id": "shop",
+      "x": 11,
+      "y": 4,
+      "index": 1
+    },
+    {
+      "id": "home-green",
+      "x": 4,
+      "y": 11,
+      "index": 2
+    },
+    {
+      "id": "home-blue",
+      "x": 12,
+      "y": 11,
+      "index": 3
+    }
+  ],
+  "props": [
+    {
+      "i": 0,
+      "x": 1,
+      "y": 7,
+      "w": 95
+    },
+    {
+      "i": 1,
+      "x": 14,
+      "y": 7,
+      "w": 72
+    },
+    {
+      "i": 0,
+      "x": 8,
+      "y": 14,
+      "w": 92
+    },
+    {
+      "i": 2,
+      "x": 6,
+      "y": 1,
+      "w": 39
+    },
+    {
+      "i": 3,
+      "x": 2,
+      "y": 6,
+      "w": 32
+    },
+    {
+      "i": 4,
+      "x": 8,
+      "y": 7,
+      "w": 75
+    },
+    {
+      "i": 4,
+      "x": 8,
+      "y": 10,
+      "w": 75
+    },
+    {
+      "i": 5,
+      "x": 3,
+      "y": 6,
+      "w": 41
+    },
+    {
+      "i": 6,
+      "x": 3,
+      "y": 7,
+      "w": 26
+    },
+    {
+      "i": 7,
+      "x": 6,
+      "y": 5,
+      "w": 25
+    },
+    {
+      "i": 7,
+      "x": 10,
+      "y": 7,
+      "w": 25
+    },
+    {
+      "i": 8,
+      "x": 5,
+      "y": 6,
+      "w": 66
+    },
+    {
+      "i": 15,
+      "x": 9,
+      "y": 5,
+      "w": 42
+    },
+    {
+      "i": 14,
+      "x": 13,
+      "y": 6,
+      "w": 24
+    }
+  ],
+  "places": {
+    "cafe": [
+      6,
+      6
+    ],
+    "shop": [
+      12,
+      6
+    ],
+    "park": [
+      8,
+      9
+    ],
+    "home": [
+      4,
+      13
+    ],
+    "studio": [
+      12,
+      13
+    ]
+  },
+  "residents": [
+    {
+      "id": "maya",
+      "name": "Maya",
+      "role": "Cafe owner",
+      "bio": "I love making the cafe a welcoming place.",
+      "x": 6,
+      "y": 6,
+      "plan": [
+        {
+          "place": "cafe",
+          "activity": "Preparing coffee"
+        },
+        {
+          "place": "park",
+          "activity": "Taking a break"
+        },
+        {
+          "place": "shop",
+          "activity": "Checking supplies"
+        }
+      ]
+    },
+    {
+      "id": "noah",
+      "name": "Noah",
+      "role": "Teacher",
+      "bio": "A good conversation always teaches me something.",
+      "x": 9,
+      "y": 8,
+      "plan": [
+        {
+          "place": "park",
+          "activity": "Planning a lesson"
+        },
+        {
+          "place": "cafe",
+          "activity": "Taking a coffee break"
+        },
+        {
+          "place": "home",
+          "activity": "Reading"
+        }
+      ]
+    },
+    {
+      "id": "elena",
+      "name": "Elena",
+      "role": "Gardener",
+      "bio": "I look after the plants and enjoy a quiet walk.",
+      "x": 7,
+      "y": 12,
+      "plan": [
+        {
+          "place": "park",
+          "activity": "Tending the garden"
+        },
+        {
+          "place": "shop",
+          "activity": "Looking for supplies"
+        },
+        {
+          "place": "home",
+          "activity": "Resting"
+        }
+      ]
+    },
+    {
+      "id": "samir",
+      "name": "Samir",
+      "role": "Shopkeeper",
+      "bio": "I like keeping the shop useful to my neighbors.",
+      "x": 12,
+      "y": 6,
+      "plan": [
+        {
+          "place": "shop",
+          "activity": "Organizing the shop"
+        },
+        {
+          "place": "cafe",
+          "activity": "Visiting the cafe"
+        },
+        {
+          "place": "park",
+          "activity": "Stretching my legs"
+        }
+      ]
+    },
+    {
+      "id": "jun",
+      "name": "Jun",
+      "role": "Artist",
+      "bio": "I find things to sketch in everyday neighborhood life.",
+      "x": 1,
+      "y": 8,
+      "plan": [
+        {
+          "place": "studio",
+          "activity": "Working on a sketch"
+        },
+        {
+          "place": "park",
+          "activity": "Looking for inspiration"
+        },
+        {
+          "place": "cafe",
+          "activity": "Meeting neighbors"
+        }
+      ]
+    },
+    {
+      "id": "visitor",
+      "name": "Alex",
+      "role": "You",
+      "bio": "A new visitor in the neighborhood.",
+      "x": 8,
+      "y": 11,
+      "plan": []
+    }
+  ]
+}

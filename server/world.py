@@ -10,6 +10,7 @@ from pathlib import Path
 
 from .model import Cognition, ModelError
 from .storage import Storage
+from .maps import obstacle_cells
 
 ROOT = Path(__file__).resolve().parents[1]
 TERMINAL = {"completed", "failed", "cancelled", "declined"}
@@ -44,10 +45,7 @@ class BaseWorld:
         self.pending_interaction = None
         self.last_saved = 0
         self.next_social = self.time + 20
-        self.blocked = set()
-        for b in self.layout["buildings"]:
-            self.blocked.update((x, y) for x in range(b["x"] - 2, b["x"] + 2) for y in range(b["y"] - 2, b["y"] + 2))
-        self.blocked.update((p["x"], p["y"]) for p in self.layout["props"])
+        self.blocked = obstacle_cells(self.layout)
         self.agents = {}
         for profile in self.layout["residents"]:
             self.agents[profile["id"]] = {**profile, "x": float(profile["x"]), "y": float(profile["y"]),
@@ -60,7 +58,7 @@ class BaseWorld:
         saved = self.storage.load() if restore else None
         if saved:
             self.layout = saved.get("layout",self.layout)
-            self.blocked = {(x,y) for b in self.layout["buildings"] for x in range(b["x"]-2,b["x"]+2) for y in range(b["y"]-2,b["y"]+2)} | {(p["x"],p["y"]) for p in self.layout["props"]}
+            self.blocked = obstacle_cells(self.layout)
             self.time = saved["time"]
             self.agents = saved["agents"]
             self.tasks = saved["tasks"]
@@ -159,6 +157,10 @@ class BaseWorld:
             # World geometry blocks perception; decorative props do not block sight.
             for building in self.layout["buildings"]:
                 if building["x"] - 2 <= x <= building["x"] + 1 and building["y"] - 2 <= y <= building["y"] + 1:
+                    return False
+            for landmark in self.layout.get("landmarks",[]):
+                x0,y0,x1,y1 = landmark["footprint"]
+                if landmark.get("blocks_view") and x0<=x<=x1 and y0<=y<=y1:
                     return False
         return True
 

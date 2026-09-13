@@ -53,6 +53,7 @@ const buildings=['cafe','shop','home-green','home-blue'];
 const props=['tree','small-tree','shrub','planter','bench','table','chair','lamp','coffee-counter','bookshelf','armchair','bed','coffee','parcel','bin','noticeboard'];
 const chars=['maya','noah','elena','samir','jun','visitor'];
 const sheets=[['terrain','isometric/terrain.png',4,4,terrain],['buildings','isometric/buildings.png',2,2,buildings],['props','isometric/props.png',4,4,props],...chars.map(id=>[id,`characters/${id}${id==='maya'?'':'-alpha'}.png`,4,8,null])];
+for(const id of ['market-pavilion','garden-conservatory','plaza-fountain','blossom-tree'])sheets.push([id,`expansion/${id}.png`,1,1,[id]]);
 const manifest={version:1,projection:{type:'game-isometric',tileWidth:128,tileHeight:64},directions:['S','SW','W','NW','N','NE','E','SE'],walkSequence:[0,1,2,3],fps:6,sheets:{}};
 for(const [id,file,cols,rows,names] of sheets){
   const p=path.join(root,'assets',file);if(!fs.existsSync(p))continue;

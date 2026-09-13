@@ -2461,6 +2461,90 @@
           "flipX": false
         }
       ]
+    },
+    "market-pavilion": {
+      "file": "expansion/market-pavilion.png",
+      "width": 1536,
+      "height": 1024,
+      "transparentPercent": 51,
+      "cols": 1,
+      "rows": 1,
+      "referenceHeight": 983,
+      "frames": [
+        {
+          "index": 0,
+          "x": 209,
+          "y": 15,
+          "width": 1208,
+          "height": 983,
+          "anchorX": 0.5,
+          "anchorY": 0.9969481180061037,
+          "name": "market-pavilion"
+        }
+      ]
+    },
+    "garden-conservatory": {
+      "file": "expansion/garden-conservatory.png",
+      "width": 1402,
+      "height": 1122,
+      "transparentPercent": 49.2,
+      "cols": 1,
+      "rows": 1,
+      "referenceHeight": 1080,
+      "frames": [
+        {
+          "index": 0,
+          "x": 134,
+          "y": 18,
+          "width": 1159,
+          "height": 1080,
+          "anchorX": 0.5,
+          "anchorY": 0.9972222222222222,
+          "name": "garden-conservatory"
+        }
+      ]
+    },
+    "plaza-fountain": {
+      "file": "expansion/plaza-fountain.png",
+      "width": 1536,
+      "height": 1024,
+      "transparentPercent": 62.3,
+      "cols": 1,
+      "rows": 1,
+      "referenceHeight": 970,
+      "frames": [
+        {
+          "index": 0,
+          "x": 278,
+          "y": 18,
+          "width": 981,
+          "height": 970,
+          "anchorX": 0.5,
+          "anchorY": 0.9969072164948454,
+          "name": "plaza-fountain"
+        }
+      ]
+    },
+    "blossom-tree": {
+      "file": "expansion/blossom-tree.png",
+      "width": 1355,
+      "height": 1160,
+      "transparentPercent": 51.5,
+      "cols": 1,
+      "rows": 1,
+      "referenceHeight": 1128,
+      "frames": [
+        {
+          "index": 0,
+          "x": 24,
+          "y": 9,
+          "width": 1317,
+          "height": 1128,
+          "anchorX": 0.5,
+          "anchorY": 0.9973404255319149,
+          "name": "blossom-tree"
+        }
+      ]
     }
   }
 }
