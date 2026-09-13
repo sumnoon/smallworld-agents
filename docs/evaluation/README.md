@@ -12,6 +12,26 @@ These are development measurements, not a replication of the Generative Agents h
 
 The last row is `community-scale-25.json`. After the snapshot write was reduced to a single serialization per save, a repeat run measured 8.61 / 24.94 ms, which is within run-to-run noise; most update time is elsewhere.
 
+## Tick performance
+
+Per-tick phase timing on the 25-resident workload showed that slow (p95) ticks were dominated by pathfinding: about 21 of 30 ms, across 4–8 searches in the same tick. Saving and replay recording were a few milliseconds each. The changes:
+
+- A* checks neighbors against one merged obstacle set and skips stale heap entries. Search order and resulting paths are unchanged.
+- Sight lines test a cached set of view-blocking cells instead of looping over every building per step.
+- The rollback snapshot taken before each tick uses `pickle`, an exact copy of the plain-data state that is cheaper than `copy.deepcopy`.
+- Lexical retrieval caches tokens per text and decodes evidence only for the memories it returns.
+- The reflection threshold is summed in SQL.
+- Tasks finished more than two simulated hours ago move to a `task_archive` table, keeping the newest 30, so per-tick copies and saves stay bounded.
+
+Both versions were run alternately in one session with `python tools/evaluate.py --population 25`:
+
+| Run | `main` median / p95 | This change median / p95 |
+| --- | --- | --- |
+| 1 | 13.64 / 39.68 ms | 9.17 / 22.96 ms |
+| 2 | 10.62 / 39.85 ms | 5.34 / 15.38 ms |
+
+Every run completed the delivery with zero overlap ticks. The machine was busier than for the earlier rows (`main` previously measured 24.94 ms at p95), so compare within this table only. The second report is `tick-performance-25.json`. The remaining spikes come from several residents building model contexts in the same tick (about 2.4 ms each) and from replay frames, which are recorded every other update at this time step.
+
 ## Cooperative picnic
 
 `python tools/evaluate-community.py` runs one offline picnic with Maya as host and writes `community-picnic.json`. The committed run completed in 571 updates (28.55 simulated minutes): Noah accepted the supply errand and finished it, and Maya, Noah and Elena were served at the plaza. There were no overlap ticks, item IDs stayed unique, and exactly one seed and one market supply were consumed. It exits nonzero if the picnic fails, residents overlap, or an item is duplicated.

@@ -2,9 +2,17 @@ import json
 import hashlib
 import zlib
 from contextlib import contextmanager
+from functools import lru_cache
 import math
 import re
 import sqlite3
+
+STOP_WORDS = frozenset({"the", "and", "with", "what", "that", "this", "have", "you", "are", "for", "was", "your", "from"})
+
+
+@lru_cache(maxsize=32768)
+def tokens(text):
+    return frozenset(re.findall(r"[a-z]{3,}", text.lower())) - STOP_WORDS
 
 
 class Storage:
@@ -23,6 +31,7 @@ class Storage:
             CREATE TABLE IF NOT EXISTS embeddings(key TEXT PRIMARY KEY, vector TEXT);
             CREATE TABLE IF NOT EXISTS decisions(id INTEGER PRIMARY KEY, time REAL, agent TEXT, method TEXT, data TEXT);
             CREATE TABLE IF NOT EXISTS commands(id TEXT PRIMARY KEY, response TEXT);
+            CREATE TABLE IF NOT EXISTS task_archive(id TEXT PRIMARY KEY, finished REAL, agent TEXT, status TEXT, data TEXT);
         ''')
         self.flush()
 
@@ -47,20 +56,24 @@ class Storage:
         rows = self.db.execute("SELECT * FROM memories WHERE owner=? ORDER BY id DESC LIMIT ?", (owner, limit)).fetchall()
         return [{**dict(r), "evidence": json.loads(r["evidence"])} for r in rows]
 
+    def importance_since(self, owner, since, window=120):
+        """Summed importance of recent direct memories, without decoding rows in Python."""
+        row = self.db.execute("""SELECT COALESCE(SUM(importance),0) FROM
+            (SELECT importance, kind, created FROM memories WHERE owner=? ORDER BY id DESC LIMIT ?)
+            WHERE created>? AND kind NOT IN ('identity','reflection')""", (owner, window, since)).fetchone()
+        return row[0]
+
     def retrieve(self, owner, query, time, limit=8):
-        # Transparent lexical baseline. The adapter can later replace similarity with embeddings.
-        stop = {"the", "and", "with", "what", "that", "this", "have", "you", "are", "for", "was", "your", "from"}
-        tokens = lambda text: set(re.findall(r"[a-z]{3,}", text.lower())) - stop
+        # Transparent lexical baseline. Evidence is decoded only for the returned memories.
         q = tokens(query)
         ranked = []
-        for memory in self.memories(owner, 1000):
-            m = tokens(memory["text"])
+        for row in self.db.execute("SELECT * FROM memories WHERE owner=? ORDER BY id DESC LIMIT 1000", (owner,)):
+            m = tokens(row["text"])
             relevance = len(q & m) / math.sqrt(max(1, len(q) * len(m)))
-            recency = .995 ** (max(0, time - memory["accessed"]) / 3600)
-            score = 3 * relevance + memory["importance"] / 10 + recency
-            ranked.append({**memory, "retrieval_score": round(score, 3)})
-        ranked.sort(key=lambda m: (m["retrieval_score"], m["id"]), reverse=True)
-        result = ranked[:limit]
+            recency = .995 ** (max(0, time - row["accessed"]) / 3600)
+            ranked.append((round(3 * relevance + row["importance"] / 10 + recency, 3), row["id"], row))
+        ranked.sort(key=lambda entry: entry[:2], reverse=True)
+        result = [{**dict(row), "evidence": json.loads(row["evidence"]), "retrieval_score": score} for score, _, row in ranked[:limit]]
         self.db.executemany("UPDATE memories SET accessed=? WHERE id=?", [(time, m["id"]) for m in result])
         self.flush()
         return result
@@ -130,6 +143,15 @@ class Storage:
         if hashlib.sha256(raw).hexdigest() != row["digest"]:
             raise ValueError("Replay integrity check failed")
         return json.loads(raw)
+
+    def archive_tasks(self, tasks):
+        self.db.executemany("INSERT OR REPLACE INTO task_archive VALUES(?,?,?,?,?)",
+                            [(t["id"], t.get("finished_at", 0), t["agent"], t["status"], json.dumps(t)) for t in tasks])
+        self.flush()
+
+    def archived_task(self, task_id):
+        row = self.db.execute("SELECT data FROM task_archive WHERE id=?", (task_id,)).fetchone()
+        return json.loads(row[0]) if row else None
 
     def decision(self, time, agent, method, data):
         self.db.execute("INSERT INTO decisions(time,agent,method,data) VALUES(?,?,?,?)", (time, agent, method, json.dumps(data)))

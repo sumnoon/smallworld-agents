@@ -49,6 +49,19 @@ The new Canvas views were rendered from actual world snapshots and visually insp
 - **Evidence.** 73 Python tests, the offline picnic report, a 25-resident community-map workload, and a small before/after `gemma4:31b` latency check. See [evaluation notes](evaluation/README.md).
 - **Limits.** Helper selection and guest acceptance are scheduling rules, not negotiation. Weather is a manual switch. There is one bed per resident and no crop failure, pricing changes or restocking.
 
+## Tick performance update
+
+- **Measured cause.** Per-tick phase timing attributed slow updates to bursts of A* searches, not persistence.
+- **Changes.**
+  - Faster A* with identical paths.
+  - Cached sight-line blockers.
+  - A pickle-based rollback snapshot.
+  - Lighter lexical retrieval and a SQL reflection threshold.
+  - Finished tasks archived to SQLite after two simulated hours; the newest 30 stay live.
+- **Result.** On the 25-resident workload, p95 update time dropped from about 40 ms to 15–23 ms in alternating runs against `main` on the same machine. See [evaluation notes](evaluation/README.md#tick-performance).
+- **Browser pass.** In offline mode on a scratch database, the app loaded without console errors. The picnic panel ran a full picnic at 4× speed: helper recruited, supplies bought, all three residents attended and were served. District camera shortcuts and replay entry and return worked; returning left the town paused, as documented. The server no longer logs a traceback when the browser cancels a request mid-response. Speech permissions and scenario export were not exercised.
+- **Limits.** Archived tasks leave live snapshots and replay frames and are not shown in the interface. They remain in the `task_archive` table.
+
 ## Map expansion update
 
 The default map is now 24 x 24 with four new destinations and four original transparent sprites. Nine new Python checks cover preservation of old collision geometry, district reachability, boardwalk navigation, natural-language district names, actual resident travel, travel out of an interior, map validation, save migration and asset metadata. A dependency-free JavaScript check verifies the district camera targets. There are 57 Python tests in total. The original map is retained as a separate scenario, and old custom maps are not automatically replaced.
