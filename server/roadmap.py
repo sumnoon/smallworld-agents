@@ -173,7 +173,7 @@ class RoadmapMixin:
             if type(step.get("at")) is not int or not self.time+60 <= step["at"] <= self.time+86400:
                 raise CommandError("Choose a meeting time between one minute and 24 hours from now")
 
-    def create_task(self, agent_id, text, spec):
+    def create_task(self, agent_id, text, spec, origin="player"):
         from .world import CommandError
         if agent_id not in self.agents:
             raise CommandError("Unknown resident")
@@ -184,7 +184,7 @@ class RoadmapMixin:
             self.validate_step(agent_id, step)
         first = steps[0]
         proxy = first if first["kind"] in ("deliver","visit","meet","wait") else {"kind":"visit","place":"park"}
-        task = super().create_task(agent_id,text,proxy)
+        task = super().create_task(agent_id,text,proxy,origin)
         task["plan"] = copy.deepcopy(steps)
         task["plan_index"] = 0
         task["step_results"] = []
@@ -580,6 +580,7 @@ class RoadmapMixin:
                         self.leases.pop(oid,None)
             if kind == "cancel":
                 self.cleanup_picnic(self.tasks[data["task"]])
+                self.defer_autonomy(self.tasks[data["task"]])
             self.storage.decision(self.time,"visitor","command",data)
             self.storage.remember_command(cid,result)
             self.save()

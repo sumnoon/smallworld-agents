@@ -314,7 +314,11 @@ class BaseWorld:
         a["path"] = []
         a["routine"] = None
 
-    def create_task(self, agent_id, text, spec):
+    def start_autonomous_task(self, a):
+        """Let a resident begin self-directed work at a routine decision; returns True if it did."""
+        return False
+
+    def create_task(self, agent_id, text, spec, origin="player"):
         a = self.agents[agent_id]
         if a["task"] and self.tasks[a["task"]]["status"] not in TERMINAL:
             raise CommandError("Please cancel or finish my current task first.")
@@ -338,11 +342,16 @@ class BaseWorld:
         task = {"id": task_id, "agent": agent_id, "request": text, "kind": kind, "recipient": recipient,
                 "place": place, "item": item, "minutes": minutes, "status": "accepted", "steps": steps,
                 "step": 0, "created": self.time, "evidence": [], "blocker": "", "retry_at": 0,
-                "deadline": self.time + 3600, "search": 0, "next_repath": 0}
+                "deadline": self.time + 3600, "search": 0, "next_repath": 0, "origin": origin}
         self.tasks[task_id] = task
         a["task"] = task_id
+        if origin == "autonomous":
+            a["status"] = "Starting my own errand"
+            seq = self.event(agent_id, "task_accepted", f"{a['name']} started their own errand: {text}", {"task": task_id, "origin": origin})
+            self.storage.memory(agent_id, "task", f"I decided on my own to: {text}", self.time, 6, [seq])
+            return task
         a["status"] = "Starting your task"
-        seq = self.event(agent_id, "task_accepted", f"{a['name']} accepted: {text}", {"task": task_id})
+        seq = self.event(agent_id, "task_accepted", f"{a['name']} accepted: {text}", {"task": task_id, "origin": origin})
         self.storage.memory(agent_id, "task", f"Alex asked me to {text}", self.time, 9, [seq])
         self.speak(agent_id, "I'll get started. You can follow my progress in the task list.", ["visitor"])
         return task
@@ -362,7 +371,7 @@ class BaseWorld:
         a["status"] = "Task completed"
         seq = self.event(a["id"], "task_completed", description, {"task": task["id"], "evidence": task["evidence"]})
         self.storage.memory(a["id"], "task", description, self.time, 9, [seq])
-        self.speak(a["id"], description, ["visitor"])
+        self.speak(a["id"], description, [] if task.get("origin") == "autonomous" else ["visitor"])
 
     def go(self, a, goal, label):
         if distance(a, goal) <= .8:
@@ -632,7 +641,8 @@ class BaseWorld:
                     a["next_reflect"] = self.time + 600
                     self.submit("reflect", a, self._context(a, "recent conversations and experiences"))
                 elif self.time >= a["next_decision"]:
-                    self.submit("decide", a, self._context(a, "next activity daily plan"))
+                    if not self.start_autonomous_task(a):
+                        self.submit("decide", a, self._context(a, "next activity daily plan"))
                 self.move(a, dt)
             if self.time >= self.next_social:
                 self.next_social = self.time + 20

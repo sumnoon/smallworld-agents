@@ -4,6 +4,8 @@ import uuid
 
 ACTIONS = {"plant":"garden", "water":"garden", "harvest":"garden", "buy":"market", "prepare":"cafe"}
 DONE = {"completed", "failed", "cancelled", "declined"}
+# A cancelled self-directed errand is not retried for ten simulated minutes.
+AUTONOMY_DEFERRAL = 600
 
 
 def initial_community():
@@ -136,6 +138,31 @@ class CommunityMixin:
                 self.complete_task(a,task,"Handed over the item in person.")
         else:
             self.picnic_step(a,task)
+
+    def start_autonomous_task(self, a):
+        """Water an unwatered personal bed, or harvest a ripe one, when nothing else claims the resident."""
+        bed = self.community["beds"].get(a["id"])
+        # A watered crop that is still growing leaves the resident to their routine.
+        if not bed or (bed.get("ready_at") and self.time < bed["ready_at"]) or "garden" not in self.layout["places"]:
+            return super().start_autonomous_task(a)
+        if (a["task"] or a["conversation"] or a["thinking"] or a["routine"]
+                or self.time < a.get("autonomy_deferred_until", 0)
+                or (self.pending_interaction and self.pending_interaction["agent"] == a["id"])
+                or a["needs"]["energy"] < 30 or a["needs"]["hunger"] > 70
+                or any(t["agent"] == a["id"] and t["status"] not in DONE for t in self.tasks.values())
+                or any(ap["status"] == "scheduled" and a["id"] in ap["accepted"] and ap["at"]-600 <= self.time <= ap["at"]+600
+                       for ap in self.appointments.values())):
+            return super().start_autonomous_task(a)
+        if bed.get("ready_at"):
+            self.create_task(a["id"],"Harvest my garden bed",{"kind":"harvest"},origin="autonomous")
+        else:
+            self.create_task(a["id"],"Water my garden bed",{"kind":"water"},origin="autonomous")
+        return True
+
+    def defer_autonomy(self, task):
+        if task.get("origin") == "autonomous" and task["status"] == "cancelled":
+            a = self.agents[task["agent"]]
+            a["autonomy_deferred_until"] = max(a.get("autonomy_deferred_until", 0), self.time+AUTONOMY_DEFERRAL)
 
     def fail_community(self, a, task, reason):
         task.update(status="failed",blocker=reason)
