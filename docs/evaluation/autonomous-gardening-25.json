@@ -1,0 +1,1809 @@
+{
+  "command": "python tools/evaluate-gardening.py --output docs/evaluation/autonomous-gardening-25.json",
+  "evaluation": "autonomous-gardening",
+  "provider": "demo",
+  "source": {
+    "revision": "cd8785d7701cc9f587c78f5ff24fadfc09265e39",
+    "dirty": true,
+    "changed_paths": [
+      "server/community.py",
+      "tests/test_community.py",
+      "docs/evaluation/autonomous-gardening-25.json",
+      "docs/evaluation/autonomous-gardening.md",
+      "tests/test_evaluate_gardening.py",
+      "tools/evaluate-gardening.py"
+    ]
+  },
+  "workload": {
+    "population": 25,
+    "initial_resources": {
+      "seeds": 12,
+      "beds": 0,
+      "market_supplies": 12,
+      "vegetables": 0,
+      "inventory_items": 0
+    },
+    "time_step": {
+      "tick_dt": 0.5,
+      "speed": 1,
+      "simulated_seconds_per_tick": 3.0
+    },
+    "ticks": 6000,
+    "simulated_start": 32400.0,
+    "simulated_start_clock": "09:00:00",
+    "simulated_end": 50400.0,
+    "simulated_end_clock": "14:00:00",
+    "simulated_duration_seconds": 18000.0,
+    "settings": {
+      "storage": "in-memory SQLite",
+      "cognition": "explicit demo (local rules)",
+      "social_conversations": "disabled (next spontaneous conversation scheduled beyond the run)",
+      "reflections": "disabled (reflections_enabled=False)",
+      "initial_decisions": "every resident due at the first tick",
+      "unchanged": "needs, routines, later decision timing, movement, retries, resources and task deadlines",
+      "not_used": "player commands, replenishment, inventory removal, forced arrivals, timestamp fast-forwarding",
+      "environment_flags": {
+        "AGENT_PROVIDER": null,
+        "AGENT_ROUTINE_MODEL": null,
+        "AGENT_REFLECTIONS": null,
+        "AGENT_LIVE_EMBEDDINGS": null
+      }
+    },
+    "scheduling_note": "Winners depend on travel and tick order; task and item IDs are random, so repeated runs can pick different residents."
+  },
+  "tasks": {
+    "accepted": {
+      "harvest": {
+        "autonomous": 12
+      },
+      "plant": {
+        "autonomous": 25
+      },
+      "water": {
+        "autonomous": 12
+      }
+    },
+    "terminal": {
+      "harvest": {
+        "autonomous": {
+          "completed": 12
+        }
+      },
+      "plant": {
+        "autonomous": {
+          "completed": 12,
+          "failed": 13
+        }
+      },
+      "water": {
+        "autonomous": {
+          "completed": 12
+        }
+      }
+    },
+    "open": {},
+    "unique_tasks": 49,
+    "resolved_from": {
+      "archive": 11,
+      "live": 38
+    }
+  },
+  "residents": {
+    "planting_count": 12,
+    "planting": [
+      "arun",
+      "ben",
+      "elena",
+      "iris",
+      "jun",
+      "lina",
+      "maya",
+      "noah",
+      "omar",
+      "rafi",
+      "samir",
+      "zara"
+    ],
+    "watering_count": 12,
+    "watering": [
+      "arun",
+      "ben",
+      "elena",
+      "iris",
+      "jun",
+      "lina",
+      "maya",
+      "noah",
+      "omar",
+      "rafi",
+      "samir",
+      "zara"
+    ],
+    "harvesting_count": 12,
+    "harvesting": [
+      "arun",
+      "ben",
+      "elena",
+      "iris",
+      "jun",
+      "lina",
+      "maya",
+      "noah",
+      "omar",
+      "rafi",
+      "samir",
+      "zara"
+    ]
+  },
+  "seeds": {
+    "initial": 12,
+    "final": 0,
+    "plant_events": 12,
+    "exhausted": {
+      "time": 32691.0,
+      "clock": "09:04:51",
+      "elapsed_minutes": 4.85,
+      "event": 608,
+      "task": "task_0208c81ee0"
+    }
+  },
+  "beds": {
+    "initial": 0,
+    "final": 0,
+    "harvest_events": 12,
+    "final_by_state": {},
+    "final_owners": []
+  },
+  "vegetables": {
+    "initial": 0,
+    "final": 12,
+    "by_owner": {
+      "arun": 1,
+      "ben": 1,
+      "elena": 1,
+      "iris": 1,
+      "jun": 1,
+      "lina": 1,
+      "maya": 1,
+      "noah": 1,
+      "omar": 1,
+      "rafi": 1,
+      "samir": 1,
+      "zara": 1
+    }
+  },
+  "successful_actions": [
+    {
+      "task": "task_0208c81ee0",
+      "agent": "omar",
+      "kind": "plant",
+      "origin": "autonomous",
+      "created": 32403.0,
+      "event": 608,
+      "event_time": 32691.0,
+      "clock": "09:04:51",
+      "site": {
+        "x": 10,
+        "y": 19,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 609
+    },
+    {
+      "task": "task_1d9b2e71f5",
+      "agent": "rafi",
+      "kind": "plant",
+      "origin": "autonomous",
+      "created": 32403.0,
+      "event": 567,
+      "event_time": 32652.0,
+      "clock": "09:04:12",
+      "site": {
+        "x": 11,
+        "y": 20,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 568
+    },
+    {
+      "task": "task_298796d660",
+      "agent": "maya",
+      "kind": "plant",
+      "origin": "autonomous",
+      "created": 32403.0,
+      "event": 218,
+      "event_time": 32505.0,
+      "clock": "09:01:45",
+      "site": {
+        "x": 8,
+        "y": 17,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 219
+    },
+    {
+      "task": "task_298bee0873",
+      "agent": "elena",
+      "kind": "plant",
+      "origin": "autonomous",
+      "created": 32403.0,
+      "event": 184,
+      "event_time": 32478.0,
+      "clock": "09:01:18",
+      "site": {
+        "x": 11,
+        "y": 17,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 185
+    },
+    {
+      "task": "task_57fe5643e7",
+      "agent": "ben",
+      "kind": "plant",
+      "origin": "autonomous",
+      "created": 32403.0,
+      "event": 437,
+      "event_time": 32568.0,
+      "clock": "09:02:48",
+      "site": {
+        "x": 8,
+        "y": 22,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 438
+    },
+    {
+      "task": "task_9c14158cab",
+      "agent": "samir",
+      "kind": "plant",
+      "origin": "autonomous",
+      "created": 32403.0,
+      "event": 259,
+      "event_time": 32514.0,
+      "clock": "09:01:54",
+      "site": {
+        "x": 12,
+        "y": 17,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 260
+    },
+    {
+      "task": "task_ad0838cbc7",
+      "agent": "zara",
+      "kind": "plant",
+      "origin": "autonomous",
+      "created": 32403.0,
+      "event": 534,
+      "event_time": 32616.0,
+      "clock": "09:03:36",
+      "site": {
+        "x": 9,
+        "y": 21,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 535
+    },
+    {
+      "task": "task_c3c83608b5",
+      "agent": "jun",
+      "kind": "plant",
+      "origin": "autonomous",
+      "created": 32403.0,
+      "event": 275,
+      "event_time": 32520.0,
+      "clock": "09:02:00",
+      "site": {
+        "x": 8,
+        "y": 18,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 276
+    },
+    {
+      "task": "task_d55fb73d9d",
+      "agent": "iris",
+      "kind": "plant",
+      "origin": "autonomous",
+      "created": 32403.0,
+      "event": 584,
+      "event_time": 32679.0,
+      "clock": "09:04:39",
+      "site": {
+        "x": 11,
+        "y": 19,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 585
+    },
+    {
+      "task": "task_dcc9c27d5d",
+      "agent": "arun",
+      "kind": "plant",
+      "origin": "autonomous",
+      "created": 32403.0,
+      "event": 577,
+      "event_time": 32664.0,
+      "clock": "09:04:24",
+      "site": {
+        "x": 9,
+        "y": 20,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 578
+    },
+    {
+      "task": "task_e8cee2a49f",
+      "agent": "noah",
+      "kind": "plant",
+      "origin": "autonomous",
+      "created": 32403.0,
+      "event": 201,
+      "event_time": 32490.0,
+      "clock": "09:01:30",
+      "site": {
+        "x": 10,
+        "y": 17,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 202
+    },
+    {
+      "task": "task_f35a813aaa",
+      "agent": "lina",
+      "kind": "plant",
+      "origin": "autonomous",
+      "created": 32403.0,
+      "event": 541,
+      "event_time": 32637.0,
+      "clock": "09:03:57",
+      "site": {
+        "x": 12,
+        "y": 20,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 542
+    },
+    {
+      "task": "task_3fc810f3a5",
+      "agent": "elena",
+      "kind": "water",
+      "origin": "autonomous",
+      "created": 32523.0,
+      "event": 365,
+      "event_time": 32556.0,
+      "clock": "09:02:36",
+      "site": {
+        "x": 11,
+        "y": 17,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 366
+    },
+    {
+      "task": "task_b90c6744a7",
+      "agent": "noah",
+      "kind": "water",
+      "origin": "autonomous",
+      "created": 32535.0,
+      "event": 434,
+      "event_time": 32568.0,
+      "clock": "09:02:48",
+      "site": {
+        "x": 10,
+        "y": 17,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 435
+    },
+    {
+      "task": "task_8906cf81fb",
+      "agent": "maya",
+      "kind": "water",
+      "origin": "autonomous",
+      "created": 32550.0,
+      "event": 494,
+      "event_time": 32583.0,
+      "clock": "09:03:03",
+      "site": {
+        "x": 8,
+        "y": 17,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 495
+    },
+    {
+      "task": "task_528f0b7f78",
+      "agent": "samir",
+      "kind": "water",
+      "origin": "autonomous",
+      "created": 32559.0,
+      "event": 513,
+      "event_time": 32592.0,
+      "clock": "09:03:12",
+      "site": {
+        "x": 12,
+        "y": 17,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 514
+    },
+    {
+      "task": "task_c4473f15c0",
+      "agent": "jun",
+      "kind": "water",
+      "origin": "autonomous",
+      "created": 32565.0,
+      "event": 516,
+      "event_time": 32598.0,
+      "clock": "09:03:18",
+      "site": {
+        "x": 8,
+        "y": 18,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 517
+    },
+    {
+      "task": "task_adf06377fb",
+      "agent": "ben",
+      "kind": "water",
+      "origin": "autonomous",
+      "created": 32613.0,
+      "event": 548,
+      "event_time": 32646.0,
+      "clock": "09:04:06",
+      "site": {
+        "x": 8,
+        "y": 22,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 549
+    },
+    {
+      "task": "task_19c60f16f7",
+      "agent": "zara",
+      "kind": "water",
+      "origin": "autonomous",
+      "created": 32661.0,
+      "event": 612,
+      "event_time": 32694.0,
+      "clock": "09:04:54",
+      "site": {
+        "x": 9,
+        "y": 21,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 613
+    },
+    {
+      "task": "task_3f3c14211c",
+      "agent": "lina",
+      "kind": "water",
+      "origin": "autonomous",
+      "created": 32682.0,
+      "event": 631,
+      "event_time": 32715.0,
+      "clock": "09:05:15",
+      "site": {
+        "x": 12,
+        "y": 20,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 632
+    },
+    {
+      "task": "task_ba3a2e82b1",
+      "agent": "rafi",
+      "kind": "water",
+      "origin": "autonomous",
+      "created": 32697.0,
+      "event": 644,
+      "event_time": 32730.0,
+      "clock": "09:05:30",
+      "site": {
+        "x": 11,
+        "y": 20,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 645
+    },
+    {
+      "task": "task_24f0933ce0",
+      "agent": "arun",
+      "kind": "water",
+      "origin": "autonomous",
+      "created": 32709.0,
+      "event": 648,
+      "event_time": 32742.0,
+      "clock": "09:05:42",
+      "site": {
+        "x": 9,
+        "y": 20,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 649
+    },
+    {
+      "task": "task_a3753c3874",
+      "agent": "iris",
+      "kind": "water",
+      "origin": "autonomous",
+      "created": 32724.0,
+      "event": 652,
+      "event_time": 32757.0,
+      "clock": "09:05:57",
+      "site": {
+        "x": 11,
+        "y": 19,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 653
+    },
+    {
+      "task": "task_2bf22026aa",
+      "agent": "omar",
+      "kind": "water",
+      "origin": "autonomous",
+      "created": 32736.0,
+      "event": 658,
+      "event_time": 32769.0,
+      "clock": "09:06:09",
+      "site": {
+        "x": 10,
+        "y": 19,
+        "room": ""
+      },
+      "item": null,
+      "outcome_event": 659
+    },
+    {
+      "task": "task_f6011fba04",
+      "agent": "samir",
+      "kind": "harvest",
+      "origin": "autonomous",
+      "created": 32838.0,
+      "event": 747,
+      "event_time": 33009.0,
+      "clock": "09:10:09",
+      "site": {
+        "x": 12,
+        "y": 17,
+        "room": ""
+      },
+      "item": "e8111f07726c4a9ab85c131ab3d5898a",
+      "outcome_event": 748
+    },
+    {
+      "task": "task_a14144fe7d",
+      "agent": "jun",
+      "kind": "harvest",
+      "origin": "autonomous",
+      "created": 32850.0,
+      "event": 796,
+      "event_time": 33150.0,
+      "clock": "09:12:30",
+      "site": {
+        "x": 8,
+        "y": 18,
+        "room": ""
+      },
+      "item": "2577065d58dd4b179814074e3d9462a9",
+      "outcome_event": 797
+    },
+    {
+      "task": "task_54edb82739",
+      "agent": "noah",
+      "kind": "harvest",
+      "origin": "autonomous",
+      "created": 32883.0,
+      "event": 4576,
+      "event_time": 46848.0,
+      "clock": "13:00:48",
+      "site": {
+        "x": 10,
+        "y": 17,
+        "room": ""
+      },
+      "item": "3e840ad23d9c415092135c72620b25d0",
+      "outcome_event": 4577
+    },
+    {
+      "task": "task_24fb7fc182",
+      "agent": "maya",
+      "kind": "harvest",
+      "origin": "autonomous",
+      "created": 32904.0,
+      "event": 4573,
+      "event_time": 46848.0,
+      "clock": "13:00:48",
+      "site": {
+        "x": 8,
+        "y": 17,
+        "room": ""
+      },
+      "item": "f953293c86c54d688aa419ad242653e5",
+      "outcome_event": 4574
+    },
+    {
+      "task": "task_b922beef50",
+      "agent": "ben",
+      "kind": "harvest",
+      "origin": "autonomous",
+      "created": 32967.0,
+      "event": 815,
+      "event_time": 33180.0,
+      "clock": "09:13:00",
+      "site": {
+        "x": 8,
+        "y": 22,
+        "room": ""
+      },
+      "item": "eb990efc951c40248e80bc2b29874610",
+      "outcome_event": 816
+    },
+    {
+      "task": "task_4791698581",
+      "agent": "lina",
+      "kind": "harvest",
+      "origin": "autonomous",
+      "created": 33018.0,
+      "event": 830,
+      "event_time": 33213.0,
+      "clock": "09:13:33",
+      "site": {
+        "x": 12,
+        "y": 20,
+        "room": ""
+      },
+      "item": "5729ba1b541b4d4f95307128b92a9cd7",
+      "outcome_event": 831
+    },
+    {
+      "task": "task_874001c105",
+      "agent": "omar",
+      "kind": "harvest",
+      "origin": "autonomous",
+      "created": 33099.0,
+      "event": 4591,
+      "event_time": 46887.0,
+      "clock": "13:01:27",
+      "site": {
+        "x": 10,
+        "y": 19,
+        "room": ""
+      },
+      "item": "4fbe55fa891540548abfe56414ec5213",
+      "outcome_event": 4592
+    },
+    {
+      "task": "task_be64adc281",
+      "agent": "elena",
+      "kind": "harvest",
+      "origin": "autonomous",
+      "created": 33141.0,
+      "event": 840,
+      "event_time": 33234.0,
+      "clock": "09:13:54",
+      "site": {
+        "x": 11,
+        "y": 17,
+        "room": ""
+      },
+      "item": "978e038e58064dff96d14aea935fc6da",
+      "outcome_event": 841
+    },
+    {
+      "task": "task_0ad83cbaf9",
+      "agent": "zara",
+      "kind": "harvest",
+      "origin": "autonomous",
+      "created": 33147.0,
+      "event": 4610,
+      "event_time": 46998.0,
+      "clock": "13:03:18",
+      "site": {
+        "x": 9,
+        "y": 21,
+        "room": ""
+      },
+      "item": "ad38e2d7a01a4333885dc18a14d66a12",
+      "outcome_event": 4611
+    },
+    {
+      "task": "task_2947e7ab89",
+      "agent": "rafi",
+      "kind": "harvest",
+      "origin": "autonomous",
+      "created": 33168.0,
+      "event": 4594,
+      "event_time": 46890.0,
+      "clock": "13:01:30",
+      "site": {
+        "x": 11,
+        "y": 20,
+        "room": ""
+      },
+      "item": "077bbcf7ba524f0fabad2ee8ec304a71",
+      "outcome_event": 4595
+    },
+    {
+      "task": "task_ee013ad629",
+      "agent": "arun",
+      "kind": "harvest",
+      "origin": "autonomous",
+      "created": 33228.0,
+      "event": 4613,
+      "event_time": 47028.0,
+      "clock": "13:03:48",
+      "site": {
+        "x": 9,
+        "y": 20,
+        "room": ""
+      },
+      "item": "abb8544a92db4a65b5b3c1093c3e95c2",
+      "outcome_event": 4614
+    },
+    {
+      "task": "task_1ad21f3dde",
+      "agent": "iris",
+      "kind": "harvest",
+      "origin": "autonomous",
+      "created": 33300.0,
+      "event": 4619,
+      "event_time": 47196.0,
+      "clock": "13:06:36",
+      "site": {
+        "x": 11,
+        "y": 19,
+        "room": ""
+      },
+      "item": "fbe17ad3ebc7439cb78d3de803178931",
+      "outcome_event": 4620
+    }
+  ],
+  "autonomous_cycles": {
+    "count": 12,
+    "residents": [
+      "arun",
+      "ben",
+      "elena",
+      "iris",
+      "jun",
+      "lina",
+      "maya",
+      "noah",
+      "omar",
+      "rafi",
+      "samir",
+      "zara"
+    ],
+    "cycles": [
+      {
+        "agent": "samir",
+        "tasks": [
+          "task_9c14158cab",
+          "task_528f0b7f78",
+          "task_f6011fba04"
+        ],
+        "events": [
+          259,
+          513,
+          747
+        ],
+        "event_clocks": [
+          "09:01:54",
+          "09:03:12",
+          "09:10:09"
+        ],
+        "vegetables": "e8111f07726c4a9ab85c131ab3d5898a"
+      },
+      {
+        "agent": "jun",
+        "tasks": [
+          "task_c3c83608b5",
+          "task_c4473f15c0",
+          "task_a14144fe7d"
+        ],
+        "events": [
+          275,
+          516,
+          796
+        ],
+        "event_clocks": [
+          "09:02:00",
+          "09:03:18",
+          "09:12:30"
+        ],
+        "vegetables": "2577065d58dd4b179814074e3d9462a9"
+      },
+      {
+        "agent": "ben",
+        "tasks": [
+          "task_57fe5643e7",
+          "task_adf06377fb",
+          "task_b922beef50"
+        ],
+        "events": [
+          437,
+          548,
+          815
+        ],
+        "event_clocks": [
+          "09:02:48",
+          "09:04:06",
+          "09:13:00"
+        ],
+        "vegetables": "eb990efc951c40248e80bc2b29874610"
+      },
+      {
+        "agent": "lina",
+        "tasks": [
+          "task_f35a813aaa",
+          "task_3f3c14211c",
+          "task_4791698581"
+        ],
+        "events": [
+          541,
+          631,
+          830
+        ],
+        "event_clocks": [
+          "09:03:57",
+          "09:05:15",
+          "09:13:33"
+        ],
+        "vegetables": "5729ba1b541b4d4f95307128b92a9cd7"
+      },
+      {
+        "agent": "elena",
+        "tasks": [
+          "task_298bee0873",
+          "task_3fc810f3a5",
+          "task_be64adc281"
+        ],
+        "events": [
+          184,
+          365,
+          840
+        ],
+        "event_clocks": [
+          "09:01:18",
+          "09:02:36",
+          "09:13:54"
+        ],
+        "vegetables": "978e038e58064dff96d14aea935fc6da"
+      },
+      {
+        "agent": "maya",
+        "tasks": [
+          "task_298796d660",
+          "task_8906cf81fb",
+          "task_24fb7fc182"
+        ],
+        "events": [
+          218,
+          494,
+          4573
+        ],
+        "event_clocks": [
+          "09:01:45",
+          "09:03:03",
+          "13:00:48"
+        ],
+        "vegetables": "f953293c86c54d688aa419ad242653e5"
+      },
+      {
+        "agent": "noah",
+        "tasks": [
+          "task_e8cee2a49f",
+          "task_b90c6744a7",
+          "task_54edb82739"
+        ],
+        "events": [
+          201,
+          434,
+          4576
+        ],
+        "event_clocks": [
+          "09:01:30",
+          "09:02:48",
+          "13:00:48"
+        ],
+        "vegetables": "3e840ad23d9c415092135c72620b25d0"
+      },
+      {
+        "agent": "omar",
+        "tasks": [
+          "task_0208c81ee0",
+          "task_2bf22026aa",
+          "task_874001c105"
+        ],
+        "events": [
+          608,
+          658,
+          4591
+        ],
+        "event_clocks": [
+          "09:04:51",
+          "09:06:09",
+          "13:01:27"
+        ],
+        "vegetables": "4fbe55fa891540548abfe56414ec5213"
+      },
+      {
+        "agent": "rafi",
+        "tasks": [
+          "task_1d9b2e71f5",
+          "task_ba3a2e82b1",
+          "task_2947e7ab89"
+        ],
+        "events": [
+          567,
+          644,
+          4594
+        ],
+        "event_clocks": [
+          "09:04:12",
+          "09:05:30",
+          "13:01:30"
+        ],
+        "vegetables": "077bbcf7ba524f0fabad2ee8ec304a71"
+      },
+      {
+        "agent": "zara",
+        "tasks": [
+          "task_ad0838cbc7",
+          "task_19c60f16f7",
+          "task_0ad83cbaf9"
+        ],
+        "events": [
+          534,
+          612,
+          4610
+        ],
+        "event_clocks": [
+          "09:03:36",
+          "09:04:54",
+          "13:03:18"
+        ],
+        "vegetables": "ad38e2d7a01a4333885dc18a14d66a12"
+      },
+      {
+        "agent": "arun",
+        "tasks": [
+          "task_dcc9c27d5d",
+          "task_24f0933ce0",
+          "task_ee013ad629"
+        ],
+        "events": [
+          577,
+          648,
+          4613
+        ],
+        "event_clocks": [
+          "09:04:24",
+          "09:05:42",
+          "13:03:48"
+        ],
+        "vegetables": "abb8544a92db4a65b5b3c1093c3e95c2"
+      },
+      {
+        "agent": "iris",
+        "tasks": [
+          "task_d55fb73d9d",
+          "task_a3753c3874",
+          "task_1ad21f3dde"
+        ],
+        "events": [
+          584,
+          652,
+          4619
+        ],
+        "event_clocks": [
+          "09:04:39",
+          "09:05:57",
+          "13:06:36"
+        ],
+        "vegetables": "fbe17ad3ebc7439cb78d3de803178931"
+      }
+    ]
+  },
+  "blocking": {
+    "time_unit_note": "Sampled blocked time charges each whole simulated tick step to every gardening task whose status is blocked after that tick.",
+    "task_blocked_events_all": 3717,
+    "task_blocked_events_gardening": 3717,
+    "unique_blocked_tasks": {
+      "harvest": 3,
+      "plant": 14
+    },
+    "unique_blocked_planting_tasks": 14,
+    "blockers_by_reason": {
+      "No seeds remain": {
+        "events": 3028,
+        "unique_tasks": 13
+      },
+      "The work site is blocked; retrying": {
+        "events": 689,
+        "unique_tasks": 11
+      }
+    },
+    "peak_concurrently_blocked_tasks": {
+      "count": 16,
+      "time": 33303.0,
+      "clock": "09:15:03",
+      "tasks": [
+        "task_acfef382de",
+        "task_c6c8eeda16",
+        "task_a6297cd2f6",
+        "task_25d832717b",
+        "task_57596e5c42",
+        "task_a81a4ac2d8",
+        "task_d723568f98",
+        "task_a9c94240f3",
+        "task_cbb9737586",
+        "task_33043b37bc",
+        "task_7e621ecf70",
+        "task_0d11f08a34",
+        "task_1e32bbd043",
+        "task_0ad83cbaf9",
+        "task_ee013ad629",
+        "task_1ad21f3dde"
+      ]
+    },
+    "sampled_blocked_resident_minutes": 3711.9,
+    "seed_contention": {
+      "observed": true,
+      "seed_starved_planting_tasks": 13,
+      "note": "Planting tasks were blocked because no seeds remained."
+    },
+    "deadline_enforcement": {
+      "rule": "Past its deadline, a task must fail with 'Community task deadline elapsed', emit exactly one task_failed event on that update and release its resident; any other outcome is a violation.",
+      "tasks_observed_past_deadline": 13,
+      "seed_starved_tasks_past_deadline": 13,
+      "failed_through_deadline": 13,
+      "released_on_first_processed_tick": 13,
+      "checks": [
+        {
+          "task": "task_acfef382de",
+          "deadline": 46803.0,
+          "first_tick_past_deadline": 46806.0,
+          "skipped_ticks": 0,
+          "terminal_status": "failed",
+          "blocker": "Community task deadline elapsed",
+          "terminal_time": 46806.0,
+          "lag_seconds": 3.0,
+          "released": true,
+          "outcome_events": [
+            4555
+          ],
+          "failure_event": 4555,
+          "enforced": true,
+          "on_first_processed_tick": true,
+          "agent": "asha",
+          "kind": "plant",
+          "seed_starved": true,
+          "deadline_clock": "13:00:03"
+        },
+        {
+          "task": "task_c6c8eeda16",
+          "deadline": 46803.0,
+          "first_tick_past_deadline": 46806.0,
+          "skipped_ticks": 0,
+          "terminal_status": "failed",
+          "blocker": "Community task deadline elapsed",
+          "terminal_time": 46806.0,
+          "lag_seconds": 3.0,
+          "released": true,
+          "outcome_events": [
+            4556
+          ],
+          "failure_event": 4556,
+          "enforced": true,
+          "on_first_processed_tick": true,
+          "agent": "leo",
+          "kind": "plant",
+          "seed_starved": true,
+          "deadline_clock": "13:00:03"
+        },
+        {
+          "task": "task_a6297cd2f6",
+          "deadline": 46803.0,
+          "first_tick_past_deadline": 46806.0,
+          "skipped_ticks": 0,
+          "terminal_status": "failed",
+          "blocker": "Community task deadline elapsed",
+          "terminal_time": 46806.0,
+          "lag_seconds": 3.0,
+          "released": true,
+          "outcome_events": [
+            4557
+          ],
+          "failure_event": 4557,
+          "enforced": true,
+          "on_first_processed_tick": true,
+          "agent": "mina",
+          "kind": "plant",
+          "seed_starved": true,
+          "deadline_clock": "13:00:03"
+        },
+        {
+          "task": "task_25d832717b",
+          "deadline": 46803.0,
+          "first_tick_past_deadline": 46806.0,
+          "skipped_ticks": 0,
+          "terminal_status": "failed",
+          "blocker": "Community task deadline elapsed",
+          "terminal_time": 46806.0,
+          "lag_seconds": 3.0,
+          "released": true,
+          "outcome_events": [
+            4558
+          ],
+          "failure_event": 4558,
+          "enforced": true,
+          "on_first_processed_tick": true,
+          "agent": "theo",
+          "kind": "plant",
+          "seed_starved": true,
+          "deadline_clock": "13:00:03"
+        },
+        {
+          "task": "task_57596e5c42",
+          "deadline": 46803.0,
+          "first_tick_past_deadline": 46806.0,
+          "skipped_ticks": 0,
+          "terminal_status": "failed",
+          "blocker": "Community task deadline elapsed",
+          "terminal_time": 46806.0,
+          "lag_seconds": 3.0,
+          "released": true,
+          "outcome_events": [
+            4559
+          ],
+          "failure_event": 4559,
+          "enforced": true,
+          "on_first_processed_tick": true,
+          "agent": "nadia",
+          "kind": "plant",
+          "seed_starved": true,
+          "deadline_clock": "13:00:03"
+        },
+        {
+          "task": "task_a81a4ac2d8",
+          "deadline": 46803.0,
+          "first_tick_past_deadline": 46806.0,
+          "skipped_ticks": 0,
+          "terminal_status": "failed",
+          "blocker": "Community task deadline elapsed",
+          "terminal_time": 46806.0,
+          "lag_seconds": 3.0,
+          "released": true,
+          "outcome_events": [
+            4560
+          ],
+          "failure_event": 4560,
+          "enforced": true,
+          "on_first_processed_tick": true,
+          "agent": "sofia",
+          "kind": "plant",
+          "seed_starved": true,
+          "deadline_clock": "13:00:03"
+        },
+        {
+          "task": "task_d723568f98",
+          "deadline": 46803.0,
+          "first_tick_past_deadline": 46806.0,
+          "skipped_ticks": 0,
+          "terminal_status": "failed",
+          "blocker": "Community task deadline elapsed",
+          "terminal_time": 46806.0,
+          "lag_seconds": 3.0,
+          "released": true,
+          "outcome_events": [
+            4561
+          ],
+          "failure_event": 4561,
+          "enforced": true,
+          "on_first_processed_tick": true,
+          "agent": "hugo",
+          "kind": "plant",
+          "seed_starved": true,
+          "deadline_clock": "13:00:03"
+        },
+        {
+          "task": "task_a9c94240f3",
+          "deadline": 46803.0,
+          "first_tick_past_deadline": 46806.0,
+          "skipped_ticks": 0,
+          "terminal_status": "failed",
+          "blocker": "Community task deadline elapsed",
+          "terminal_time": 46806.0,
+          "lag_seconds": 3.0,
+          "released": true,
+          "outcome_events": [
+            4562
+          ],
+          "failure_event": 4562,
+          "enforced": true,
+          "on_first_processed_tick": true,
+          "agent": "emil",
+          "kind": "plant",
+          "seed_starved": true,
+          "deadline_clock": "13:00:03"
+        },
+        {
+          "task": "task_cbb9737586",
+          "deadline": 46803.0,
+          "first_tick_past_deadline": 46806.0,
+          "skipped_ticks": 0,
+          "terminal_status": "failed",
+          "blocker": "Community task deadline elapsed",
+          "terminal_time": 46806.0,
+          "lag_seconds": 3.0,
+          "released": true,
+          "outcome_events": [
+            4563
+          ],
+          "failure_event": 4563,
+          "enforced": true,
+          "on_first_processed_tick": true,
+          "agent": "nila",
+          "kind": "plant",
+          "seed_starved": true,
+          "deadline_clock": "13:00:03"
+        },
+        {
+          "task": "task_33043b37bc",
+          "deadline": 46803.0,
+          "first_tick_past_deadline": 46806.0,
+          "skipped_ticks": 0,
+          "terminal_status": "failed",
+          "blocker": "Community task deadline elapsed",
+          "terminal_time": 46806.0,
+          "lag_seconds": 3.0,
+          "released": true,
+          "outcome_events": [
+            4564
+          ],
+          "failure_event": 4564,
+          "enforced": true,
+          "on_first_processed_tick": true,
+          "agent": "tara",
+          "kind": "plant",
+          "seed_starved": true,
+          "deadline_clock": "13:00:03"
+        },
+        {
+          "task": "task_7e621ecf70",
+          "deadline": 46803.0,
+          "first_tick_past_deadline": 46806.0,
+          "skipped_ticks": 0,
+          "terminal_status": "failed",
+          "blocker": "Community task deadline elapsed",
+          "terminal_time": 46806.0,
+          "lag_seconds": 3.0,
+          "released": true,
+          "outcome_events": [
+            4565
+          ],
+          "failure_event": 4565,
+          "enforced": true,
+          "on_first_processed_tick": true,
+          "agent": "yuki",
+          "kind": "plant",
+          "seed_starved": true,
+          "deadline_clock": "13:00:03"
+        },
+        {
+          "task": "task_0d11f08a34",
+          "deadline": 46803.0,
+          "first_tick_past_deadline": 46806.0,
+          "skipped_ticks": 0,
+          "terminal_status": "failed",
+          "blocker": "Community task deadline elapsed",
+          "terminal_time": 46806.0,
+          "lag_seconds": 3.0,
+          "released": true,
+          "outcome_events": [
+            4566
+          ],
+          "failure_event": 4566,
+          "enforced": true,
+          "on_first_processed_tick": true,
+          "agent": "rosa",
+          "kind": "plant",
+          "seed_starved": true,
+          "deadline_clock": "13:00:03"
+        },
+        {
+          "task": "task_1e32bbd043",
+          "deadline": 46803.0,
+          "first_tick_past_deadline": 46806.0,
+          "skipped_ticks": 0,
+          "terminal_status": "failed",
+          "blocker": "Community task deadline elapsed",
+          "terminal_time": 46806.0,
+          "lag_seconds": 3.0,
+          "released": true,
+          "outcome_events": [
+            4567
+          ],
+          "failure_event": 4567,
+          "enforced": true,
+          "on_first_processed_tick": true,
+          "agent": "eli",
+          "kind": "plant",
+          "seed_starved": true,
+          "deadline_clock": "13:00:03"
+        }
+      ]
+    },
+    "affected_tasks": [
+      {
+        "task": "task_0208c81ee0",
+        "agent": "omar",
+        "kind": "plant",
+        "origin": "autonomous",
+        "created": 32403.0,
+        "created_clock": "09:00:03",
+        "deadline": 46803.0,
+        "deadline_clock": "13:00:03",
+        "status": "completed",
+        "blocker": "",
+        "sampled_blocked_minutes": 1.0,
+        "lifetime_minutes": 4.8,
+        "censored": false,
+        "first_blocked": 32406.0,
+        "first_blocked_clock": "09:00:06",
+        "task_blocked_events": 1,
+        "reasons": [
+          "The work site is blocked; retrying"
+        ],
+        "terminal_time": 32691.0,
+        "terminal_clock": "09:04:51",
+        "seed_starved": false
+      },
+      {
+        "task": "task_0d11f08a34",
+        "agent": "rosa",
+        "kind": "plant",
+        "origin": "autonomous",
+        "created": 32403.0,
+        "created_clock": "09:00:03",
+        "deadline": 46803.0,
+        "deadline_clock": "13:00:03",
+        "status": "failed",
+        "blocker": "Community task deadline elapsed",
+        "sampled_blocked_minutes": 231.5,
+        "lifetime_minutes": 240.05,
+        "censored": false,
+        "first_blocked": 32916.0,
+        "first_blocked_clock": "09:08:36",
+        "task_blocked_events": 232,
+        "reasons": [
+          "No seeds remain"
+        ],
+        "terminal_time": 46806.0,
+        "terminal_clock": "13:00:06",
+        "seed_starved": true
+      },
+      {
+        "task": "task_1e32bbd043",
+        "agent": "eli",
+        "kind": "plant",
+        "origin": "autonomous",
+        "created": 32403.0,
+        "created_clock": "09:00:03",
+        "deadline": 46803.0,
+        "deadline_clock": "13:00:03",
+        "status": "failed",
+        "blocker": "Community task deadline elapsed",
+        "sampled_blocked_minutes": 235.25,
+        "lifetime_minutes": 240.05,
+        "censored": false,
+        "first_blocked": 32691.0,
+        "first_blocked_clock": "09:04:51",
+        "task_blocked_events": 236,
+        "reasons": [
+          "No seeds remain"
+        ],
+        "terminal_time": 46806.0,
+        "terminal_clock": "13:00:06",
+        "seed_starved": true
+      },
+      {
+        "task": "task_25d832717b",
+        "agent": "theo",
+        "kind": "plant",
+        "origin": "autonomous",
+        "created": 32403.0,
+        "created_clock": "09:00:03",
+        "deadline": 46803.0,
+        "deadline_clock": "13:00:03",
+        "status": "failed",
+        "blocker": "Community task deadline elapsed",
+        "sampled_blocked_minutes": 233.65,
+        "lifetime_minutes": 240.05,
+        "censored": false,
+        "first_blocked": 32406.0,
+        "first_blocked_clock": "09:00:06",
+        "task_blocked_events": 234,
+        "reasons": [
+          "The work site is blocked; retrying",
+          "No seeds remain"
+        ],
+        "terminal_time": 46806.0,
+        "terminal_clock": "13:00:06",
+        "seed_starved": true
+      },
+      {
+        "task": "task_33043b37bc",
+        "agent": "tara",
+        "kind": "plant",
+        "origin": "autonomous",
+        "created": 32403.0,
+        "created_clock": "09:00:03",
+        "deadline": 46803.0,
+        "deadline_clock": "13:00:03",
+        "status": "failed",
+        "blocker": "Community task deadline elapsed",
+        "sampled_blocked_minutes": 234.2,
+        "lifetime_minutes": 240.05,
+        "censored": false,
+        "first_blocked": 32406.0,
+        "first_blocked_clock": "09:00:06",
+        "task_blocked_events": 235,
+        "reasons": [
+          "The work site is blocked; retrying",
+          "No seeds remain"
+        ],
+        "terminal_time": 46806.0,
+        "terminal_clock": "13:00:06",
+        "seed_starved": true
+      },
+      {
+        "task": "task_57596e5c42",
+        "agent": "nadia",
+        "kind": "plant",
+        "origin": "autonomous",
+        "created": 32403.0,
+        "created_clock": "09:00:03",
+        "deadline": 46803.0,
+        "deadline_clock": "13:00:03",
+        "status": "failed",
+        "blocker": "Community task deadline elapsed",
+        "sampled_blocked_minutes": 232.0,
+        "lifetime_minutes": 240.05,
+        "censored": false,
+        "first_blocked": 32406.0,
+        "first_blocked_clock": "09:00:06",
+        "task_blocked_events": 232,
+        "reasons": [
+          "The work site is blocked; retrying",
+          "No seeds remain"
+        ],
+        "terminal_time": 46806.0,
+        "terminal_clock": "13:00:06",
+        "seed_starved": true
+      },
+      {
+        "task": "task_7e621ecf70",
+        "agent": "yuki",
+        "kind": "plant",
+        "origin": "autonomous",
+        "created": 32403.0,
+        "created_clock": "09:00:03",
+        "deadline": 46803.0,
+        "deadline_clock": "13:00:03",
+        "status": "failed",
+        "blocker": "Community task deadline elapsed",
+        "sampled_blocked_minutes": 235.7,
+        "lifetime_minutes": 240.05,
+        "censored": false,
+        "first_blocked": 32406.0,
+        "first_blocked_clock": "09:00:06",
+        "task_blocked_events": 236,
+        "reasons": [
+          "The work site is blocked; retrying",
+          "No seeds remain"
+        ],
+        "terminal_time": 46806.0,
+        "terminal_clock": "13:00:06",
+        "seed_starved": true
+      },
+      {
+        "task": "task_a6297cd2f6",
+        "agent": "mina",
+        "kind": "plant",
+        "origin": "autonomous",
+        "created": 32403.0,
+        "created_clock": "09:00:03",
+        "deadline": 46803.0,
+        "deadline_clock": "13:00:03",
+        "status": "failed",
+        "blocker": "Community task deadline elapsed",
+        "sampled_blocked_minutes": 230.25,
+        "lifetime_minutes": 240.05,
+        "censored": false,
+        "first_blocked": 32991.0,
+        "first_blocked_clock": "09:09:51",
+        "task_blocked_events": 231,
+        "reasons": [
+          "No seeds remain"
+        ],
+        "terminal_time": 46806.0,
+        "terminal_clock": "13:00:06",
+        "seed_starved": true
+      },
+      {
+        "task": "task_a81a4ac2d8",
+        "agent": "sofia",
+        "kind": "plant",
+        "origin": "autonomous",
+        "created": 32403.0,
+        "created_clock": "09:00:03",
+        "deadline": 46803.0,
+        "deadline_clock": "13:00:03",
+        "status": "failed",
+        "blocker": "Community task deadline elapsed",
+        "sampled_blocked_minutes": 233.55,
+        "lifetime_minutes": 240.05,
+        "censored": false,
+        "first_blocked": 32793.0,
+        "first_blocked_clock": "09:06:33",
+        "task_blocked_events": 234,
+        "reasons": [
+          "No seeds remain"
+        ],
+        "terminal_time": 46806.0,
+        "terminal_clock": "13:00:06",
+        "seed_starved": true
+      },
+      {
+        "task": "task_a9c94240f3",
+        "agent": "emil",
+        "kind": "plant",
+        "origin": "autonomous",
+        "created": 32403.0,
+        "created_clock": "09:00:03",
+        "deadline": 46803.0,
+        "deadline_clock": "13:00:03",
+        "status": "failed",
+        "blocker": "Community task deadline elapsed",
+        "sampled_blocked_minutes": 230.75,
+        "lifetime_minutes": 240.05,
+        "censored": false,
+        "first_blocked": 32406.0,
+        "first_blocked_clock": "09:00:06",
+        "task_blocked_events": 231,
+        "reasons": [
+          "The work site is blocked; retrying",
+          "No seeds remain"
+        ],
+        "terminal_time": 46806.0,
+        "terminal_clock": "13:00:06",
+        "seed_starved": true
+      },
+      {
+        "task": "task_acfef382de",
+        "agent": "asha",
+        "kind": "plant",
+        "origin": "autonomous",
+        "created": 32403.0,
+        "created_clock": "09:00:03",
+        "deadline": 46803.0,
+        "deadline_clock": "13:00:03",
+        "status": "failed",
+        "blocker": "Community task deadline elapsed",
+        "sampled_blocked_minutes": 231.55,
+        "lifetime_minutes": 240.05,
+        "censored": false,
+        "first_blocked": 32406.0,
+        "first_blocked_clock": "09:00:06",
+        "task_blocked_events": 232,
+        "reasons": [
+          "The work site is blocked; retrying",
+          "No seeds remain"
+        ],
+        "terminal_time": 46806.0,
+        "terminal_clock": "13:00:06",
+        "seed_starved": true
+      },
+      {
+        "task": "task_c6c8eeda16",
+        "agent": "leo",
+        "kind": "plant",
+        "origin": "autonomous",
+        "created": 32403.0,
+        "created_clock": "09:00:03",
+        "deadline": 46803.0,
+        "deadline_clock": "13:00:03",
+        "status": "failed",
+        "blocker": "Community task deadline elapsed",
+        "sampled_blocked_minutes": 232.65,
+        "lifetime_minutes": 240.05,
+        "censored": false,
+        "first_blocked": 32406.0,
+        "first_blocked_clock": "09:00:06",
+        "task_blocked_events": 233,
+        "reasons": [
+          "The work site is blocked; retrying",
+          "No seeds remain"
+        ],
+        "terminal_time": 46806.0,
+        "terminal_clock": "13:00:06",
+        "seed_starved": true
+      },
+      {
+        "task": "task_cbb9737586",
+        "agent": "nila",
+        "kind": "plant",
+        "origin": "autonomous",
+        "created": 32403.0,
+        "created_clock": "09:00:03",
+        "deadline": 46803.0,
+        "deadline_clock": "13:00:03",
+        "status": "failed",
+        "blocker": "Community task deadline elapsed",
+        "sampled_blocked_minutes": 234.95,
+        "lifetime_minutes": 240.05,
+        "censored": false,
+        "first_blocked": 32709.0,
+        "first_blocked_clock": "09:05:09",
+        "task_blocked_events": 235,
+        "reasons": [
+          "No seeds remain"
+        ],
+        "terminal_time": 46806.0,
+        "terminal_clock": "13:00:06",
+        "seed_starved": true
+      },
+      {
+        "task": "task_d723568f98",
+        "agent": "hugo",
+        "kind": "plant",
+        "origin": "autonomous",
+        "created": 32403.0,
+        "created_clock": "09:00:03",
+        "deadline": 46803.0,
+        "deadline_clock": "13:00:03",
+        "status": "failed",
+        "blocker": "Community task deadline elapsed",
+        "sampled_blocked_minutes": 233.9,
+        "lifetime_minutes": 240.05,
+        "censored": false,
+        "first_blocked": 32772.0,
+        "first_blocked_clock": "09:06:12",
+        "task_blocked_events": 234,
+        "reasons": [
+          "No seeds remain"
+        ],
+        "terminal_time": 46806.0,
+        "terminal_clock": "13:00:06",
+        "seed_starved": true
+      },
+      {
+        "task": "task_0ad83cbaf9",
+        "agent": "zara",
+        "kind": "harvest",
+        "origin": "autonomous",
+        "created": 33147.0,
+        "created_clock": "09:12:27",
+        "deadline": 47547.0,
+        "deadline_clock": "13:12:27",
+        "status": "completed",
+        "blocker": "",
+        "sampled_blocked_minutes": 228.0,
+        "lifetime_minutes": 230.85,
+        "censored": false,
+        "first_blocked": 33150.0,
+        "first_blocked_clock": "09:12:30",
+        "task_blocked_events": 228,
+        "reasons": [
+          "The work site is blocked; retrying"
+        ],
+        "terminal_time": 46998.0,
+        "terminal_clock": "13:03:18",
+        "seed_starved": false
+      },
+      {
+        "task": "task_ee013ad629",
+        "agent": "arun",
+        "kind": "harvest",
+        "origin": "autonomous",
+        "created": 33228.0,
+        "created_clock": "09:13:48",
+        "deadline": 47628.0,
+        "deadline_clock": "13:13:48",
+        "status": "completed",
+        "blocker": "",
+        "sampled_blocked_minutes": 227.0,
+        "lifetime_minutes": 230.0,
+        "censored": false,
+        "first_blocked": 33231.0,
+        "first_blocked_clock": "09:13:51",
+        "task_blocked_events": 227,
+        "reasons": [
+          "The work site is blocked; retrying"
+        ],
+        "terminal_time": 47028.0,
+        "terminal_clock": "13:03:48",
+        "seed_starved": false
+      },
+      {
+        "task": "task_1ad21f3dde",
+        "agent": "iris",
+        "kind": "harvest",
+        "origin": "autonomous",
+        "created": 33300.0,
+        "created_clock": "09:15:00",
+        "deadline": 47700.0,
+        "deadline_clock": "13:15:00",
+        "status": "completed",
+        "blocker": "",
+        "sampled_blocked_minutes": 226.0,
+        "lifetime_minutes": 231.6,
+        "censored": false,
+        "first_blocked": 33303.0,
+        "first_blocked_clock": "09:15:03",
+        "task_blocked_events": 226,
+        "reasons": [
+          "The work site is blocked; retrying"
+        ],
+        "terminal_time": 47196.0,
+        "terminal_clock": "13:06:36",
+        "seed_starved": false
+      }
+    ]
+  },
+  "still_open_tasks": [],
+  "events": {
+    "total": 4676,
+    "by_kind": {
+      "activity": 163,
+      "community_harvest": 12,
+      "community_plant": 12,
+      "community_water": 12,
+      "dialogue": 36,
+      "observation": 625,
+      "start": 1,
+      "task_accepted": 49,
+      "task_blocked": 3717,
+      "task_completed": 36,
+      "task_failed": 13
+    }
+  },
+  "invariants": {
+    "passed": true,
+    "violation_count": 0,
+    "violations": []
+  },
+  "wall_seconds": 23.66,
+  "timing_note": "Wall time is descriptive for this machine only.",
+  "blockers": []
+}

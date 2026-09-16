@@ -65,7 +65,13 @@ class CommunityTests(unittest.TestCase):
     def test_cooperative_picnic_runs_to_real_serving(self):
         w = self.world
         task = w.create_task("maya","Organize a picnic",{"kind":"picnic"})
-        advance(w,lambda:task["status"] in ("completed","failed"),6000)
+        def finished():
+            # Finished errands make other residents due; keep them from planting with the shared seeds.
+            for b in w.agents.values():
+                if b["id"] != "maya":
+                    b["next_decision"] = 10**10
+            return task["status"] in ("completed","failed")
+        advance(w,finished,6000)
         self.assertEqual(task["status"],"completed",json.dumps(task))
         p = task["picnic"]
         self.assertEqual(w.tasks[p["helper_task"]]["status"],"completed")
@@ -281,6 +287,8 @@ class AutonomousWateringTests(unittest.TestCase):
         w = self.world
         plant(w,"maya")
         w.community["beds"]["maya"]["ready_at"] = w.time+100
+        # Held vegetables keep a resident without a bed from planting.
+        w.agents["jun"]["inventory"] = [{"id":"jun-veg","kind":"vegetables"}]
         for aid in ("maya","jun"):
             w.agents[aid]["next_decision"] = w.time
         w.tick(.5)
@@ -454,6 +462,8 @@ class AutonomousHarvestTests(unittest.TestCase):
         ripe(w,"maya",3)
         ripe(w,"elena",3.5)
         plant(w,"jun")
+        # Held vegetables keep noah, who has no bed, on the routine decision.
+        w.agents["noah"]["inventory"] = [{"id":"noah-veg","kind":"vegetables"}]
         for aid in ("maya","elena","jun","noah"):
             w.agents[aid]["next_decision"] = w.time
         w.tick(.5)
@@ -702,3 +712,543 @@ class AutonomousHarvestTests(unittest.TestCase):
         self.assertEqual([i["kind"] for i in a["inventory"]],["vegetables"])
         self.assertEqual([e["payload"]["item"]["id"] for e in harvest_events(w)],[a["inventory"][0]["id"]])
         self.assertEqual((w.community["beds"],w.community["seeds"]),({},12))
+
+
+def plant_events(world, aid=None):
+    rows = world.storage.db.execute("SELECT id FROM events WHERE kind='community_plant'").fetchall()
+    return [e for e in (event_row(world,r["id"]) for r in rows) if aid is None or e["actor"]==aid]
+
+
+def task_rows(world, task, kinds):
+    rows = world.storage.db.execute("SELECT id FROM events WHERE json_extract(payload,'$.task')=? ORDER BY id",(task["id"],)).fetchall()
+    return [e for e in (event_row(world,r["id"]) for r in rows) if e["kind"] in kinds]
+
+
+def outcomes(world, task):
+    return [(e["kind"],e["text"],e["time"]) for e in task_rows(world,task,("task_completed","task_failed","task_cancelled","task_declined"))]
+
+
+def blocks(world, task):
+    return [e["text"] for e in task_rows(world,task,("task_blocked",))]
+
+
+def appointment(world, aid, offset):
+    return {"ap":{"id":"ap","host":"noah","place":"plaza","at":world.time+offset,"guests":[aid],"invited":[aid],
+                  "accepted":["noah",aid],"declined":[],"attended":[],"status":"scheduled","task":""}}
+
+
+class AutonomousPlantingTests(unittest.TestCase):
+    def setUp(self):
+        self.world = World(cognition=Cognition("demo"),restore=False)
+        quiet(self.world)
+
+    def tearDown(self):
+        self.world.close()
+
+    def test_due_decision_plants_own_bed_on_foot_without_decide(self):
+        w = self.world
+        a = w.agents["elena"]
+        # Inventory other than vegetables does not stop planting.
+        a["inventory"] = [{"id":"elena-supplies","kind":"supplies"}]
+        ripe(w,"noah",5000)
+        w.agents["noah"]["inventory"] = [{"id":"noah-veg","kind":"vegetables"}]
+        others = json.dumps({"bed":w.community["beds"]["noah"],"inventory":w.agents["noah"]["inventory"]})
+        inventory = json.dumps(a["inventory"])
+        supplies,credits = w.community["supplies"],a.get("credits",25)
+        a["next_decision"] = w.time+30
+        w.tick(.5)
+        self.assertEqual((a["task"],autonomous(w,"elena")),(None,[]))
+        a["next_decision"] = w.time
+        w.tick(.5)
+        tasks = autonomous(w,"elena")
+        self.assertEqual(len(tasks),1)
+        task = tasks[0]
+        self.assertEqual((task["kind"],task["origin"],a["task"]),("plant","autonomous",task["id"]))
+        self.assertFalse(any(j["agent"]=="elena" and j["method"]=="decide" for j in w.jobs))
+        # Scheduling alone has no physical effect.
+        self.assertEqual((w.community["seeds"],"elena" in w.community["beds"],json.dumps(a["inventory"])),(12,False,inventory))
+        accepted = w.storage.db.execute("SELECT * FROM events WHERE kind='task_accepted' AND json_extract(payload,'$.task')=?",(task["id"],)).fetchone()
+        self.assertEqual(json.loads(accepted["payload"])["origin"],"autonomous")
+        self.assertIn("started their own errand: Plant my garden bed",accepted["text"])
+        self.assertFalse(any("Alex" in m["text"] for m in w.storage.memories("elena") if m["kind"]=="task"))
+        self.assertIsNone(w.storage.db.execute("SELECT id FROM events WHERE kind='dialogue' AND actor='elena'").fetchone())
+        with self.assertRaisesRegex(CommandError,"cancel or finish"):
+            w.create_task("elena","Wait",{"kind":"wait","minutes":5})
+        started = {}
+        def finished():
+            if a.get("working") and "work" not in started:
+                started["work"] = w.time
+                self.assertEqual((w.community["seeds"],"elena" in w.community["beds"]),(12,False))
+            return task["status"]=="completed"
+        advance(w,finished,600)
+        evidence = [event_row(w,seq) for seq in task["evidence"]]
+        self.assertEqual([e["kind"] for e in evidence],["community_plant"])
+        self.assertEqual(plant_events(w),evidence)
+        self.assertLessEqual(distance(a,w.bed_goal("elena")),.8)
+        self.assertGreaterEqual(evidence[0]["time"]-started["work"],30)
+        payload = evidence[0]["payload"]
+        self.assertEqual((evidence[0]["actor"],payload["task"],payload["item"],payload["site"]),("elena",task["id"],None,w.bed_goal("elena")))
+        self.assertEqual(w.community["beds"]["elena"],{**w.bed_goal("elena"),"planted":evidence[0]["time"],"ready_at":None})
+        self.assertEqual(sorted(w.community["beds"]),["elena","noah"])
+        self.assertEqual((w.community["seeds"],w.community["supplies"],a.get("credits",25),json.dumps(a["inventory"])),(11,supplies,credits,inventory))
+        self.assertEqual(json.dumps({"bed":w.community["beds"]["noah"],"inventory":w.agents["noah"]["inventory"]}),others)
+        completion = w.storage.db.execute("SELECT payload FROM events WHERE kind='dialogue' AND actor='elena'").fetchall()
+        self.assertEqual([json.loads(r["payload"])["recipients"] for r in completion],[[]])
+
+    def test_ineligible_planting_falls_back_while_existing_beds_are_tended(self):
+        w = self.world
+        # Without a garden on the map, an eligible resident keeps the routine decision.
+        garden = w.layout["places"].pop("garden")
+        try:
+            self.assertFalse(w.start_autonomous_task(w.agents["jun"]))
+        finally:
+            w.layout["places"]["garden"] = garden
+        self.assertEqual(autonomous(w,"jun"),[])
+        # With no seeds, bed-less residents fall back; existing beds are still watered and harvested.
+        w.community["seeds"] = 0
+        veg = [{"id":"held-veg","kind":"vegetables"}]
+        plant(w,"elena")
+        ripe(w,"maya",3)
+        ripe(w,"noah",100)
+        for aid in ("elena","maya"):
+            w.agents[aid]["inventory"] = list(veg)
+        for aid in ("jun","elena","maya","noah"):
+            w.agents[aid]["next_decision"] = w.time
+        w.tick(.5)
+        self.assertEqual(w.time,w.community["beds"]["maya"]["ready_at"])
+        self.assertEqual([t["kind"] for t in autonomous(w,"elena")],["water"])
+        self.assertEqual([t["kind"] for t in autonomous(w,"maya")],["harvest"])
+        self.assertEqual(autonomous(w,"jun")+autonomous(w,"noah"),[])
+        self.assertEqual({j["agent"] for j in w.jobs if j["method"]=="decide"},{"jun","noah"})
+        # With seeds available, held vegetables still keep a bed-less resident from planting.
+        w.community["seeds"] = 5
+        w.agents["samir"]["inventory"] = list(veg)
+        w.agents["samir"]["next_decision"] = w.time
+        w.tick(.5)
+        self.assertEqual(autonomous(w,"samir"),[])
+        self.assertTrue(any(j["agent"]=="samir" and j["method"]=="decide" for j in w.jobs))
+        self.assertEqual((w.community["seeds"],sorted(w.community["beds"])),(5,["elena","maya","noah"]))
+        self.assertEqual(plant_events(w),[])
+
+    def test_planting_respects_existing_precedence(self):
+        w = self.world
+        player = w.create_task("samir","Wait",{"kind":"wait","minutes":30})
+        self.assertFalse(w.start_autonomous_task(w.agents["samir"]))
+        w.command({"id":"pause-samir","kind":"suspend_task","task":player["id"]})
+        self.assertFalse(w.start_autonomous_task(w.agents["samir"]))
+        w.pending_interaction = {"kind":"task","agent":"noah","text":"Visit the park","repath":0,"expires":w.time+600}
+        self.assertFalse(w.start_autonomous_task(w.agents["noah"]))
+        w.pending_interaction = None
+        a = w.agents["maya"]
+        for key,value,restore in (("thinking",True,False),("conversation","chat_x",None),("routine",{"place":"park"},None)):
+            a[key] = value
+            self.assertFalse(w.start_autonomous_task(a),key)
+            a[key] = restore
+        for need,value in (("energy",29.9),("hunger",70.1)):
+            previous = a["needs"][need]
+            a["needs"][need] = value
+            self.assertFalse(w.start_autonomous_task(a),need)
+            a["needs"][need] = previous
+        for offset in (600,-600):
+            w.appointments = appointment(w,"maya",offset)
+            self.assertFalse(w.start_autonomous_task(a),offset)
+        w.appointments = {}
+        a["autonomy_deferred_until"] = w.time+1
+        self.assertFalse(w.start_autonomous_task(a))
+        a.pop("autonomy_deferred_until")
+        self.assertEqual(autonomous(w,"samir")+autonomous(w,"noah")+autonomous(w,"maya"),[])
+        # A due reflection is handled before the decision branch.
+        a["next_reflect"] = a["next_decision"] = w.time
+        with patch.object(w,"reflection_due",return_value=True):
+            w.tick(.5)
+        self.assertEqual(autonomous(w,"maya"),[])
+        self.assertTrue(any(j["agent"]=="maya" and j["method"]=="reflect" for j in w.jobs))
+        a["next_reflect"] = a["next_decision"] = 10**10
+        advance(w,lambda:not a["thinking"],20)
+        # A routine in progress is not interrupted by planting.
+        jun = w.agents["jun"]
+        jun["routine"] = {"place":"park","activity":"Relaxing","duration":6000,"arrived":None}
+        jun["next_decision"] = w.time
+        for _ in range(20):
+            w.tick(.5)
+        self.assertEqual((autonomous(w,"jun"),jun["routine"]["activity"]),([],"Relaxing"))
+        # A running player task is never replaced by a routine-time planting.
+        elena = w.create_task("elena","Wait",{"kind":"wait","minutes":30})
+        w.agents["elena"]["next_decision"] = w.time
+        for _ in range(20):
+            w.tick(.5)
+        self.assertEqual((w.agents["elena"]["task"],elena["status"]),(elena["id"],"running"))
+        self.assertEqual(autonomous(w,"elena"),[])
+        self.assertEqual((plant_events(w),w.community["beds"],w.community["seeds"]),([],{},12))
+        # Just outside the appointment window, at the need thresholds and at deferral expiry, planting starts.
+        a["needs"].update(energy=30.0,hunger=70.0)
+        a["autonomy_deferred_until"] = w.time
+        w.appointments = appointment(w,"maya",601)
+        self.assertTrue(w.start_autonomous_task(a))
+        self.assertEqual([t["kind"] for t in autonomous(w,"maya")],["plant"])
+        self.assertEqual(w.community["seeds"],12)
+
+    def test_repeated_due_ticks_and_resume_keep_one_planting(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = str(Path(folder)/"town.db")
+            w = World(path,cognition=Cognition("demo"),restore=False)
+            quiet(w)
+            task = dispatch(w,"elena")
+            def working():
+                w.agents["elena"]["next_decision"] = w.time
+                return bool(w.agents["elena"].get("working"))
+            advance(w,working,400)
+            self.assertEqual((len(autonomous(w,"elena")),w.community["seeds"],w.community["beds"]),(1,12,{}))
+            w.close()
+            restored = World(path,cognition=Cognition("demo"))
+            try:
+                quiet(restored)
+                a = restored.agents["elena"]
+                tasks = autonomous(restored,"elena")
+                self.assertEqual([(t["id"],t["kind"],t["origin"]) for t in tasks],[(task["id"],"plant","autonomous")])
+                self.assertEqual((a["task"],restored.community["seeds"]),(task["id"],12))
+                resumed = tasks[0]
+                def done():
+                    a["next_decision"] = min(a["next_decision"],restored.time)
+                    return resumed["status"]=="completed"
+                advance(restored,done,600)
+                for _ in range(20):
+                    restored.tick(.5)
+                    a["next_decision"] = min(a["next_decision"],restored.time)
+                self.assertEqual([t["id"] for t in autonomous(restored,"elena") if t["kind"]=="plant"],[task["id"]])
+                planted = restored.community["beds"]["elena"]["planted"]
+            finally:
+                restored.close()
+            again = World(path,cognition=Cognition("demo"))
+            try:
+                evidence = plant_events(again)
+                self.assertEqual([(e["actor"],e["payload"]["task"],e["time"]) for e in evidence],[("elena",task["id"],planted)])
+                self.assertEqual(again.tasks[task["id"]]["evidence"],[evidence[0]["id"]])
+                self.assertEqual((again.community["seeds"],sorted(again.community["beds"])),(11,["elena"]))
+            finally:
+                again.close()
+
+    def test_resident_plants_waters_harvests_and_stops_while_holding_vegetables(self):
+        w = self.world
+        a = w.agents["elena"]
+        def due():
+            a["next_decision"] = min(a["next_decision"],w.time)
+            a["routine"] = None
+        def harvested():
+            due()
+            return any(t["kind"]=="harvest" and t["status"]=="completed" for t in autonomous(w,"elena"))
+        advance(w,harvested,2000)
+        plant_task,water,harvest = sorted(autonomous(w,"elena"),key=lambda t:t["created"])
+        self.assertEqual([(t["kind"],t["status"]) for t in (plant_task,water,harvest)],
+                         [("plant","completed"),("water","completed"),("harvest","completed")])
+        planted_at = event_row(w,plant_task["evidence"][0])["time"]
+        watered_at = event_row(w,water["evidence"][0])["time"]
+        self.assertGreaterEqual(water["created"],planted_at)
+        self.assertGreaterEqual(harvest["created"],watered_at+180)
+        self.assertEqual([i["kind"] for i in a["inventory"]],["vegetables"])
+        self.assertEqual([e["payload"]["item"]["id"] for e in harvest_events(w)],[a["inventory"][0]["id"]])
+        self.assertEqual((len(plant_events(w)),w.community["beds"],w.community["seeds"]),(1,{},11))
+        for _ in range(40):
+            w.tick(.5)
+            due()
+        self.assertEqual(len(autonomous(w,"elena")),3)
+        self.assertEqual((len(a["inventory"]),w.community["seeds"]),(1,11))
+        # Once the vegetables are gone, a later due decision plants again.
+        a["inventory"] = []
+        def replanting():
+            due()
+            return len(autonomous(w,"elena")) == 4
+        advance(w,replanting,100)
+        self.assertEqual([t["kind"] for t in sorted(autonomous(w,"elena"),key=lambda t:t["created"])],["plant","water","harvest","plant"])
+        self.assertEqual((w.community["seeds"],w.community["beds"]),(11,{}))
+        self.assertEqual({t["kind"] for t in w.tasks.values()},{"plant","water","harvest"})
+
+    def test_cancelled_active_and_paused_plantings_share_deferral_across_resume(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = str(Path(folder)/"town.db")
+            w = World(path,cognition=Cognition("demo"),restore=False)
+            quiet(w)
+            active = dispatch(w,"elena")
+            self.assertEqual(active["kind"],"plant")
+            advance(w,lambda:bool(w.agents["elena"].get("working")),400)
+            w.command({"id":"cancel-active","kind":"cancel","task":active["id"]})
+            active_at = w.time
+            paused = dispatch(w,"jun")
+            self.assertEqual(paused["kind"],"plant")
+            w.command({"id":"pause-plant","kind":"suspend_task","task":paused["id"]})
+            self.assertEqual(paused["status"],"paused")
+            w.command({"id":"cancel-paused","kind":"cancel","task":paused["id"]})
+            paused_at = w.time
+            self.assertEqual((active["status"],paused["status"]),("cancelled","cancelled"))
+            self.assertEqual((w.community["seeds"],w.community["beds"],plant_events(w)),(12,{},[]))
+            self.assertEqual(w.agents["elena"]["autonomy_deferred_until"],active_at+600)
+            self.assertEqual(w.agents["jun"]["autonomy_deferred_until"],paused_at+600)
+            # The deferral is resident-wide: it blocks planting, watering and harvesting.
+            jun = w.agents["jun"]
+            self.assertFalse(w.start_autonomous_task(jun))
+            plant(w,"jun")
+            self.assertFalse(w.start_autonomous_task(jun))
+            w.community["beds"]["jun"]["ready_at"] = w.time
+            self.assertFalse(w.start_autonomous_task(jun))
+            w.community["beds"].pop("jun")
+            w.close()
+            restored = World(path,cognition=Cognition("demo"))
+            try:
+                quiet(restored)
+                residents = [restored.agents[aid] for aid in ("elena","jun")]
+                self.assertEqual([r["autonomy_deferred_until"] for r in residents],[active_at+600,paused_at+600])
+                while restored.time < active_at+590:
+                    for r in residents:
+                        r["next_decision"] = restored.time
+                    restored.tick(.5)
+                    for r in residents:
+                        r["routine"] = None
+                    self.assertEqual(len(autonomous(restored,"elena")+autonomous(restored,"jun")),2)
+                self.assertEqual((plant_events(restored),restored.community["beds"],restored.community["seeds"]),([],{},12))
+                self.assertEqual([r["inventory"] for r in residents],[[],[]])
+                def retried():
+                    for r in residents:
+                        r["next_decision"] = min(r["next_decision"],restored.time)
+                        r["routine"] = None
+                    return len(autonomous(restored,"elena")) == 2
+                advance(restored,retried,20)
+                self.assertGreaterEqual(restored.time,active_at+600)
+                retry = restored.tasks[restored.agents["elena"]["task"]]
+                self.assertEqual((retry["kind"],retry["origin"]),("plant","autonomous"))
+                self.assertEqual(restored.tasks[active["id"]]["status"],"cancelled")
+                self.assertEqual(restored.tasks[paused["id"]]["status"],"cancelled")
+                advance(restored,lambda:retry["status"]=="completed",600)
+                self.assertEqual([e["payload"]["task"] for e in plant_events(restored,"elena")],[retry["id"]])
+                self.assertEqual(restored.community["seeds"],12-len(plant_events(restored)))
+            finally:
+                restored.close()
+
+    def test_player_can_request_planting_during_deferral_while_holding_vegetables(self):
+        w = self.world
+        a = w.agents["elena"]
+        cancelled = dispatch(w,"elena")
+        self.assertEqual(cancelled["kind"],"plant")
+        w.command({"id":"cancel-plant","kind":"cancel","task":cancelled["id"]})
+        a["inventory"] = [{"id":"elena-veg","kind":"vegetables"}]
+        w.command({"id":"player-plant","kind":"task","agent":"elena","text":"Plant vegetables"})
+        advance(w,lambda:bool(a["task"]),400)
+        task = w.tasks[a["task"]]
+        self.assertLess(w.time,a["autonomy_deferred_until"])
+        self.assertEqual((task["kind"],task["origin"]),("plant","player"))
+        advance(w,lambda:task["status"]=="completed",600)
+        self.assertEqual([e["payload"]["task"] for e in plant_events(w)],[task["id"]])
+        self.assertEqual((w.community["seeds"],[i["id"] for i in a["inventory"]]),(11,["elena-veg"]))
+        self.assertEqual(cancelled["status"],"cancelled")
+
+    def test_last_seed_goes_to_first_finished_planting(self):
+        w = self.world
+        w.community["seeds"] = 1
+        residents = [w.agents[aid] for aid in ("elena","maya")]
+        for r in residents:
+            goal = w.bed_goal(r["id"])
+            r.update(x=float(goal["x"]),y=float(goal["y"]))
+        tasks = [dispatch(w,r["id"]) for r in residents]
+        self.assertEqual([t["kind"] for t in tasks],["plant","plant"])
+        self.assertEqual((w.community["seeds"],w.community["beds"]),(1,{}))
+        # The first resident already starts work during the second resident's dispatch tick.
+        seen = {r["id"]:w.time for r in residents if r.get("working")}
+        def settled():
+            if all(r.get("working") for r in residents):
+                seen["both"] = True
+            for r in residents:
+                if r.get("working"):
+                    seen.setdefault(r["id"],w.time)
+            return sorted(t["status"] for t in tasks) == ["completed","failed"]
+        advance(w,settled,200)
+        self.assertTrue(seen.get("both"))
+        winner,loser = sorted(tasks,key=lambda t:t["status"]!="completed")
+        planted = plant_events(w)
+        self.assertEqual([e["payload"]["task"] for e in planted],[winner["id"]])
+        self.assertGreaterEqual(planted[0]["time"]-seen[winner["agent"]],30)
+        self.assertLessEqual(distance(w.agents[winner["agent"]],w.bed_goal(winner["agent"])),.8)
+        self.assertEqual((sorted(w.community["beds"]),w.community["seeds"]),([winner["agent"]],0))
+        # The loser fails on its next processing update instead of blocking.
+        self.assertEqual((loser["blocker"],loser["evidence"]),("No seeds remain",[]))
+        order = list(w.agents)
+        next_update = planted[0]["time"]+(3 if order.index(loser["agent"]) < order.index(winner["agent"]) else 0)
+        self.assertEqual(outcomes(w,loser),[("task_failed","No seeds remain",next_update)])
+        self.assertEqual(blocks(w,loser),[])
+        released = w.agents[loser["agent"]]
+        self.assertEqual((released["task"],released.get("working"),released["path"]),(None,None,[]))
+        # While stock is zero, the released resident falls back to the routine decision without new plantings.
+        released["next_decision"] = w.time
+        w.tick(.5)
+        self.assertTrue(any(j["agent"]==released["id"] and j["method"]=="decide" for j in w.jobs))
+        for _ in range(30):
+            w.tick(.5)
+            released["next_decision"] = min(released["next_decision"],w.time)
+        self.assertEqual([t["id"] for t in autonomous(w,loser["agent"])],[loser["id"]])
+        self.assertEqual((len(plant_events(w)),w.community["seeds"],loser["status"],len(outcomes(w,loser))),(1,0,"failed",1))
+        # A restored seed is used by a new task at a later due decision; the failed one never resumes.
+        w.community["seeds"] = 1
+        released["routine"] = None
+        def replanted():
+            released["next_decision"] = min(released["next_decision"],w.time)
+            released["routine"] = None
+            return any(t["status"]=="completed" for t in autonomous(w,loser["agent"]) if t["id"]!=loser["id"])
+        advance(w,replanted,600)
+        retry = next(t for t in autonomous(w,loser["agent"]) if t["id"]!=loser["id"])
+        evidence = event_row(w,retry["evidence"][0])
+        self.assertEqual((retry["kind"],loser["status"],evidence["kind"]),("plant","failed","community_plant"))
+        self.assertEqual(sorted(e["payload"]["task"] for e in plant_events(w)),sorted([winner["id"],retry["id"]]))
+        self.assertEqual((sorted(w.community["beds"]),w.community["seeds"]),(["elena","maya"],0))
+
+    def test_new_bed_after_dispatch_blocks_without_effects_even_without_seeds(self):
+        w = self.world
+        has_bed = dispatch(w,"maya")
+        self.assertEqual(has_bed["kind"],"plant")
+        w.community["seeds"] = 0
+        plant(w,"maya")
+        bed = dict(w.community["beds"]["maya"])
+        advance(w,lambda:has_bed["status"]=="blocked",600)
+        self.assertEqual(has_bed["blocker"],"Harvest the existing bed first")
+        for _ in range(30):
+            w.tick(.5)
+        self.assertEqual((plant_events(w),has_bed["evidence"],has_bed["status"],outcomes(w,has_bed)),([],[],"blocked",[]))
+        self.assertEqual((w.community["beds"],w.community["seeds"],w.agents["maya"]["inventory"]),({"maya":bed},0,[]))
+        # A returning seed does not let the retry overwrite the existing bed.
+        w.community["seeds"] = 1
+        for _ in range(60):
+            w.tick(.5)
+        self.assertEqual((w.community["beds"],w.community["seeds"],has_bed["status"],plant_events(w)),({"maya":bed},1,"blocked",[]))
+
+    def test_seed_loss_while_walking_or_working_fails_on_next_update(self):
+        w = self.world
+        walker = dispatch(w,"jun")
+        self.assertGreater(distance(w.agents["jun"],w.bed_goal("jun")),.8)
+        worker = dispatch(w,"elena")
+        advance(w,lambda:bool(w.agents["elena"].get("working")),400)
+        self.assertTrue(w.agents["jun"]["path"])
+        w.community["seeds"] = 0
+        resources = json.dumps(w.community)
+        w.tick(.5)
+        for task in (walker,worker):
+            a = w.agents[task["agent"]]
+            self.assertEqual((task["status"],task["blocker"],task["evidence"]),("failed","No seeds remain",[]),task["agent"])
+            self.assertEqual(outcomes(w,task),[("task_failed","No seeds remain",w.time)])
+            self.assertEqual((a["task"],a.get("working"),a["path"]),(None,None,[]))
+            self.assertEqual(blocks(w,task),[])
+        # Released residents return to their routine; the failed tasks stay failed with no second outcome.
+        for _ in range(20):
+            w.tick(.5)
+        self.assertEqual([len(autonomous(w,aid)) for aid in ("jun","elena")],[1,1])
+        self.assertEqual((json.dumps(w.community),plant_events(w),len(outcomes(w,walker)),len(outcomes(w,worker))),(resources,[],1,1))
+        self.assertEqual([w.agents[aid]["inventory"] for aid in ("jun","elena")],[[],[]])
+
+    def test_blocked_seed_starved_planting_releases_before_retry_and_after_restore(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = str(Path(folder)/"town.db")
+            w = World(path,cognition=Cognition("demo"),restore=False)
+            quiet(w)
+            with patch.object(w,"pathfind",return_value=None):
+                unreachable = dispatch(w,"jun")
+                advance(w,lambda:unreachable["status"]=="blocked",20)
+            self.assertGreater(unreachable["retry_at"],w.time+3)
+            # An older saved task that was left blocked by seed shortage, with its retry still in the future.
+            legacy = dispatch(w,"elena")
+            w.block_task(w.agents["elena"],legacy,"No seeds remain")
+            w.community["seeds"] = 0
+            credits = w.agents["elena"].get("credits",25)
+            w.close()
+            restored = World(path,cognition=Cognition("demo"))
+            try:
+                quiet(restored)
+                tasks = [restored.tasks[unreachable["id"]],restored.tasks[legacy["id"]]]
+                self.assertEqual([t["status"] for t in tasks],["blocked","blocked"])
+                self.assertTrue(all(restored.time+3 < t["retry_at"] for t in tasks))
+                restored.tick(.5)
+                for task in tasks:
+                    self.assertEqual((task["status"],task["blocker"],task["evidence"]),("failed","No seeds remain",[]))
+                    self.assertEqual(outcomes(restored,task),[("task_failed","No seeds remain",restored.time)])
+                    self.assertIsNone(restored.agents[task["agent"]]["task"])
+                for _ in range(20):
+                    restored.tick(.5)
+                failed_at = restored.time
+            finally:
+                restored.close()
+            again = World(path,cognition=Cognition("demo"))
+            try:
+                quiet(again)
+                for _ in range(20):
+                    again.tick(.5)
+                for tid in (unreachable["id"],legacy["id"]):
+                    task = again.tasks[tid]
+                    self.assertEqual((task["status"],len(outcomes(again,task)),again.agents[task["agent"]]["task"]),("failed",1,None))
+                self.assertEqual((plant_events(again),again.community["seeds"],again.community["beds"]),([],0,{}))
+                self.assertEqual((again.agents["elena"].get("credits",25),again.agents["elena"]["inventory"]),(credits,[]))
+                self.assertGreater(again.time,failed_at)
+            finally:
+                again.close()
+
+    def test_deadline_precedence_and_skipped_residents_for_seed_starved_planting(self):
+        w = self.world
+        late,due,talking,paused = (dispatch(w,aid) for aid in ("elena","maya","jun","noah"))
+        w.community["seeds"] = 0
+        # Each tick advances simulated time by 3 s before tasks are processed.
+        late["deadline"] = w.time+2.9
+        due["deadline"] = w.time+3
+        w.agents["jun"]["conversation"] = "chat_x"
+        w.command({"id":"pause-noah","kind":"suspend_task","task":paused["id"]})
+        w.tick(.5)
+        self.assertEqual(outcomes(w,late),[("task_failed","Community task deadline elapsed",w.time)])
+        self.assertEqual(outcomes(w,due),[("task_failed","No seeds remain",w.time)])
+        self.assertEqual(w.time,due["deadline"])
+        for _ in range(5):
+            w.tick(.5)
+        self.assertEqual((w.agents["jun"]["task"],paused["status"],outcomes(w,talking),outcomes(w,paused)),(talking["id"],"paused",[],[]))
+        w.agents["jun"]["conversation"] = None
+        w.tick(.5)
+        self.assertEqual(outcomes(w,talking),[("task_failed","No seeds remain",w.time)])
+        w.command({"id":"resume-noah","kind":"resume_task","task":paused["id"]})
+        w.tick(.5)
+        self.assertEqual(outcomes(w,paused),[("task_failed","No seeds remain",w.time)])
+        self.assertEqual((plant_events(w),w.community["beds"],w.community["seeds"]),([],{},0))
+
+    def test_player_and_legacy_planting_keep_retry_and_deadline_without_seeds(self):
+        w = self.world
+        w.community["seeds"] = 0
+        player = w.create_task("elena","Plant vegetables",{"kind":"plant"})
+        legacy = w.create_task("maya","Plant vegetables",{"kind":"plant"})
+        legacy.pop("origin")
+        starved = w.create_task("jun","Plant vegetables",{"kind":"plant"})
+        self.assertEqual((player["origin"],starved["origin"]),("player","player"))
+        for aid in ("elena","maya","jun"):
+            goal = w.bed_goal(aid)
+            w.agents[aid].update(x=float(goal["x"]),y=float(goal["y"]))
+        advance(w,lambda:all(t["status"]=="blocked" for t in (player,legacy,starved)),100)
+        retry_at = player["retry_at"]
+        self.assertEqual({t["blocker"] for t in (player,legacy,starved)},{"No seeds remain"})
+        while w.time < retry_at+10:
+            w.tick(.5)
+        self.assertEqual([t["status"] for t in (player,legacy,starved)],["blocked"]*3)
+        self.assertGreater(player["retry_at"],retry_at)
+        self.assertEqual([outcomes(w,t) for t in (player,legacy,starved)],[[],[],[]])
+        # The retry still fails through the deadline while stock stays empty.
+        starved["deadline"] = w.time
+        w.tick(.5)
+        self.assertEqual(outcomes(w,starved),[("task_failed","Community task deadline elapsed",w.time)])
+        w.community["seeds"] = 2
+        advance(w,lambda:player["status"]=="completed" and legacy["status"]=="completed",200)
+        self.assertEqual(sorted(e["payload"]["task"] for e in plant_events(w)),sorted([player["id"],legacy["id"]]))
+        self.assertEqual((sorted(w.community["beds"]),w.community["seeds"]),(["elena","maya"],0))
+
+    def test_unreachable_site_blocks_planting_until_route_returns(self):
+        w = self.world
+        jun = w.agents["jun"]
+        self.assertGreater(distance(jun,w.bed_goal("jun")),.8)
+        with patch.object(w,"pathfind",return_value=None):
+            blocked = dispatch(w,"jun")
+            self.assertEqual(blocked["kind"],"plant")
+            advance(w,lambda:blocked["status"]=="blocked",20)
+            self.assertEqual(blocked["blocker"],"The work site is blocked; retrying")
+            for _ in range(30):
+                w.tick(.5)
+        self.assertEqual((plant_events(w),blocked["evidence"],w.community["beds"],w.community["seeds"]),([],[],{},12))
+        advance(w,lambda:blocked["status"]=="completed",600)
+        self.assertEqual([e["payload"]["task"] for e in plant_events(w)],[blocked["id"]])
+        self.assertEqual((sorted(w.community["beds"]),w.community["seeds"]),(["jun"],11))
