@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-29T00:00:00Z",
+  "title": "Design System: Smallworld Agents",
+  "extensions": {
+    "colorMeta": {
+      "ink": { "role": "neutral", "displayName": "Night Ground", "canonical": "#0b1311", "tonalRamp": ["#0b1311", "#121c19", "#182521", "#1f2e29", "#23332e", "#30463f", "#a1b4aa", "#e7efea"] },
+      "panel": { "role": "neutral", "displayName": "Dusk Panel", "canonical": "#121c19", "tonalRamp": ["#0b1311", "#121c19", "#182521", "#1f2e29", "#23332e", "#30463f", "#a1b4aa", "#e7efea"] },
+      "raise": { "role": "neutral", "displayName": "Raised Moss", "canonical": "#182521", "tonalRamp": ["#0b1311", "#121c19", "#182521", "#1f2e29", "#23332e", "#30463f", "#a1b4aa", "#e7efea"] },
+      "raise-2": { "role": "neutral", "displayName": "Raised Moss 2", "canonical": "#1f2e29", "tonalRamp": ["#0b1311", "#121c19", "#182521", "#1f2e29", "#23332e", "#30463f", "#a1b4aa", "#e7efea"] },
+      "line": { "role": "neutral", "displayName": "Hairline", "canonical": "#23332e", "tonalRamp": ["#0b1311", "#121c19", "#182521", "#1f2e29", "#23332e", "#30463f", "#a1b4aa", "#e7efea"] },
+      "line-strong": { "role": "neutral", "displayName": "Hairline Strong", "canonical": "#30463f", "tonalRamp": ["#0b1311", "#121c19", "#182521", "#1f2e29", "#23332e", "#30463f", "#a1b4aa", "#e7efea"] },
+      "text": { "role": "neutral", "displayName": "Lamp Text", "canonical": "#e7efea", "tonalRamp": ["#0b1311", "#121c19", "#182521", "#1f2e29", "#30463f", "#a1b4aa", "#b9c9c0", "#e7efea"] },
+      "text-2": { "role": "neutral", "displayName": "Soft Text", "canonical": "#b9c9c0", "tonalRamp": ["#0b1311", "#121c19", "#182521", "#1f2e29", "#30463f", "#a1b4aa", "#b9c9c0", "#e7efea"] },
+      "muted": { "role": "neutral", "displayName": "Muted Sage", "canonical": "#a1b4aa", "tonalRamp": ["#0b1311", "#121c19", "#182521", "#1f2e29", "#30463f", "#a1b4aa", "#b9c9c0", "#e7efea"] },
+      "amber": { "role": "primary", "displayName": "Lantern Amber", "canonical": "#e8a85c", "tonalRamp": ["oklch(18% 0.03 70)", "oklch(28% 0.06 70)", "oklch(40% 0.09 70)", "oklch(52% 0.11 70)", "oklch(64% 0.12 70)", "oklch(77% 0.12 70)", "oklch(85% 0.09 72)", "oklch(94% 0.04 75)"] },
+      "amber-soft": { "role": "primary", "displayName": "Amber Glow", "canonical": "#f2c48a", "tonalRamp": ["oklch(18% 0.03 70)", "oklch(28% 0.06 70)", "oklch(40% 0.09 70)", "oklch(52% 0.11 70)", "oklch(64% 0.12 70)", "oklch(77% 0.12 70)", "oklch(85% 0.09 72)", "oklch(94% 0.04 75)"] },
+      "amber-ink": { "role": "primary", "displayName": "Amber Ink", "canonical": "#1d130a", "tonalRamp": ["oklch(18% 0.03 70)", "oklch(28% 0.06 70)", "oklch(40% 0.09 70)", "oklch(52% 0.11 70)", "oklch(64% 0.12 70)", "oklch(77% 0.12 70)", "oklch(85% 0.09 72)", "oklch(94% 0.04 75)"] },
+      "mint": { "role": "secondary", "displayName": "Verified Mint", "canonical": "#7fd3a8", "tonalRamp": ["oklch(18% 0.03 160)", "oklch(28% 0.05 160)", "oklch(40% 0.07 160)", "oklch(52% 0.09 160)", "oklch(66% 0.10 160)", "oklch(80% 0.11 160)", "oklch(88% 0.07 160)", "oklch(95% 0.03 160)"] },
+      "mint-ink": { "role": "secondary", "displayName": "Mint Ink", "canonical": "#0c2219", "tonalRamp": ["oklch(18% 0.03 160)", "oklch(28% 0.05 160)", "oklch(40% 0.07 160)", "oklch(52% 0.09 160)", "oklch(66% 0.10 160)", "oklch(80% 0.11 160)", "oklch(88% 0.07 160)", "oklch(95% 0.03 160)"] },
+      "caution": { "role": "tertiary", "displayName": "Caution Straw", "canonical": "#e9c46a", "tonalRamp": ["oklch(18% 0.03 88)", "oklch(28% 0.06 88)", "oklch(40% 0.08 88)", "oklch(54% 0.10 88)", "oklch(68% 0.11 88)", "oklch(83% 0.12 88)", "oklch(90% 0.08 90)", "oklch(96% 0.04 92)"] },
+      "caution-ink": { "role": "tertiary", "displayName": "Caution Ink", "canonical": "#2a1f05", "tonalRamp": ["oklch(18% 0.03 88)", "oklch(28% 0.06 88)", "oklch(40% 0.08 88)", "oklch(54% 0.10 88)", "oklch(68% 0.11 88)", "oklch(83% 0.12 88)", "oklch(90% 0.08 90)", "oklch(96% 0.04 92)"] },
+      "coral": { "role": "tertiary", "displayName": "Ember Coral", "canonical": "#f08f78", "tonalRamp": ["oklch(18% 0.04 35)", "oklch(28% 0.07 35)", "oklch(40% 0.10 35)", "oklch(52% 0.12 35)", "oklch(63% 0.13 35)", "oklch(74% 0.13 35)", "oklch(85% 0.08 38)", "oklch(94% 0.03 40)"] },
+      "coral-ink": { "role": "tertiary", "displayName": "Coral Ink", "canonical": "#2b0d06", "tonalRamp": ["oklch(18% 0.04 35)", "oklch(28% 0.07 35)", "oklch(40% 0.10 35)", "oklch(52% 0.12 35)", "oklch(63% 0.13 35)", "oklch(74% 0.13 35)", "oklch(85% 0.08 38)", "oklch(94% 0.03 40)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The world heading above the stage; one per page." },
+      "name": { "displayName": "Resident Name", "purpose": "Selected resident's name in the sidecar portrait. One of only two Georgia uses." },
+      "clock": { "displayName": "Clock", "purpose": "Town clock in the masthead, amber, tabular figures. 1.25rem at <=520px, 1.0625rem at <=380px." },
+      "headline": { "displayName": "Headline", "purpose": "Depth-card headings." },
+      "title": { "displayName": "Title", "purpose": "Task titles, tools summary and tool sub-headings (550-600)." },
+      "body": { "displayName": "Body", "purpose": "Paragraphs and the composer." },
+      "body-sm": { "displayName": "Body Small", "purpose": "Controls, chat lines, memories, section notes; default button size." },
+      "label": { "displayName": "Label", "purpose": "Hints, footers, need labels, example chips, compact actions." },
+      "status": { "displayName": "Status", "purpose": "Connection-mode pill (uppercase, 0.12em) and request status chips (capitalized, 0.04em). Status words only." },
+      "data": { "displayName": "Data", "purpose": "Event timestamps, replay time, memory metadata, scenario JSON and output." }
+    },
+    "shadows": [
+      { "name": "float", "value": "0 12px 32px -10px rgb(0 0 0 / 0.55), 0 2px 6px rgb(0 0 0 / 0.35)", "purpose": "Floating surfaces only: glass rail groups at >=1340px, toast, connection pill. Never paired with a border." },
+      { "name": "canvas-label", "value": "canvas shadowColor rgba(0,0,0,.45), shadowBlur 8, shadowOffsetY 2", "purpose": "Place and resident labels drawn on the town canvas (speech bubbles: .4 / 10 / 3)." },
+      { "name": "stage-light", "value": "radial-gradient(ellipse 58% 52% at 50% 46%, #2c3d2e 0%, #17231e 55%, #0d1513 100%)", "purpose": "The stage's light pool behind the town; paired with a 45% black edge vignette." },
+      { "name": "portrait-light", "value": "radial-gradient(ellipse 55% 70% at 22% 85%, rgb(232 168 92 / 0.22), transparent 70%)", "purpose": "Amber pool of light under the resident portrait." },
+      { "name": "afterglow", "value": "radial-gradient(closest-side, rgb(242 196 138 / 0.75), rgb(232 168 92 / 0) 100%)", "purpose": "Behind a request status chip when its state changes; fades out over 1100ms." }
+    ],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(0.23, 1, 0.32, 1)", "purpose": "Default curve: press, tab underline, disclosure chevrons, stage light-up, afterglow." },
+      { "name": "ease-in-out", "value": "cubic-bezier(0.77, 0, 0.175, 1)", "purpose": "Defined in :root for on-screen movement; no shipped rule uses it yet." },
+      { "name": "press", "value": "160ms", "purpose": "Button press: transform scale(0.97). Reduced motion: opacity 0.85, no scale." },
+      { "name": "quick", "value": "150ms ease", "purpose": "Hover overlay opacity (7% currentColor, 12% white on primary); fine pointers only." },
+      { "name": "tab", "value": "200ms", "purpose": "Active-tab amber underline scaleX 0 to 1; disclosure chevron rotation." },
+      { "name": "toast", "value": "400ms ease", "purpose": "Toast opacity and translateY(100%) to 0, visibility delayed on exit. Reduced motion: no translate." },
+      { "name": "light-up", "value": "900ms", "purpose": "Signature moment: stage veil opacity 0.92 to 0 and canvas scale 0.97 to 1 with opacity 0.6 to 1, once artwork loads (data-light dim to on). Reduced motion: veil only, 300ms." },
+      { "name": "afterglow", "value": "1100ms", "purpose": "Request status chip afterglow opacity 1 to 0 on state change (.glow). Reduced motion: 600ms." }
+    ],
+    "breakpoints": [
+      { "name": "xs", "value": "380px", "purpose": "Tighter masthead gaps, smaller clock." },
+      { "name": "sm", "value": "520px", "purpose": "56px masthead, save hidden, 16px card padding." },
+      { "name": "md", "value": "860px", "purpose": "Single column (town, resident, requests); scrolling rails; shorter canvas." },
+      { "name": "lg", "value": "1180px", "purpose": "Sidecar narrows to 330px." },
+      { "name": "rails", "value": "1340px", "purpose": "Rails float inside the stage as glass." },
+      { "name": "xl", "value": "1600px", "purpose": "Sidecar widens to 400px." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Default control: raised moss, hairline border, overlay hover, press compression.",
+      "html": "<button class=\"ds-btn\">Save town</button>",
+      "css": ".ds-btn { position: relative; isolation: isolate; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 36px; padding: 7px 13px; font: 550 0.8125rem/1.2 var(--font-ui, system-ui, sans-serif); color: #e7efea; background: #182521; border: 1px solid #23332e; border-radius: 10px; cursor: pointer; transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1); } .ds-btn::after { content: \"\"; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: currentColor; opacity: 0; pointer-events: none; transition: opacity 150ms ease; } .ds-btn:hover::after { opacity: 0.07; } .ds-btn:active { transform: scale(0.97); } .ds-btn:focus-visible { outline: 2px solid #e8a85c; outline-offset: 2px; }"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-send",
+      "description": "The one amber action in a region; full-width send in the sidecar.",
+      "html": "<button class=\"ds-btn-primary\">Say it to Maya <svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 11 11 5M6 5h5v5\"/></svg></button>",
+      "css": ".ds-btn-primary { position: relative; isolation: isolate; display: inline-flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 42px; padding: 10px 14px; font: 650 0.875rem/1.2 system-ui, sans-serif; color: #1d130a; background: #e8a85c; border: 1px solid #e8a85c; border-radius: 10px; cursor: pointer; transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1); } .ds-btn-primary::after { content: \"\"; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: #fff; opacity: 0; transition: opacity 150ms ease; } .ds-btn-primary:hover::after { opacity: 0.12; } .ds-btn-primary:active { transform: scale(0.97); } .ds-btn-primary:focus-visible { outline: 2px solid #e8a85c; outline-offset: 2px; }"
+    },
+    {
+      "name": "Composer",
+      "kind": "input",
+      "refersTo": "textarea",
+      "description": "Sunken ink well for messages and tasks; amber edge only while focused.",
+      "html": "<textarea class=\"ds-textarea\" rows=\"3\" placeholder=\"Hi Maya, what are you doing today?\"></textarea>",
+      "css": ".ds-textarea { width: 100%; min-height: 84px; resize: vertical; padding: 11px 12px; font: 400 0.875rem/1.5 system-ui, sans-serif; color: #e7efea; background: #0b1311; border: 1px solid #30463f; border-radius: 10px; caret-color: #e8a85c; } .ds-textarea::placeholder { color: #a1b4aa; } .ds-textarea:focus-visible { outline: 2px solid #e8a85c; outline-offset: 0; border-color: #e8a85c; }"
+    },
+    {
+      "name": "Sidecar Tabs",
+      "kind": "nav",
+      "refersTo": "tab",
+      "description": "Equal-width tabs; the active tab grows an amber underline from the centre.",
+      "html": "<div class=\"ds-tabs\"><button class=\"ds-tab is-active\">Talk</button><button class=\"ds-tab\">Memories</button><button class=\"ds-tab\">Plans</button></div>",
+      "css": ".ds-tabs { display: flex; gap: 4px; border-bottom: 1px solid #23332e; background: #121c19; } .ds-tab { position: relative; flex: 1; min-height: 40px; border: 0; border-radius: 8px 8px 0 0; background: none; color: #a1b4aa; font: 400 0.8125rem/1.2 system-ui, sans-serif; cursor: pointer; } .ds-tab::before { content: \"\"; position: absolute; left: 12%; right: 12%; bottom: -1px; height: 2px; border-radius: 2px; background: #e8a85c; transform: scaleX(0); transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1); } .ds-tab.is-active { color: #e7efea; font-weight: 600; } .ds-tab.is-active::before { transform: scaleX(1); } .ds-tab:hover { color: #e7efea; } .ds-tab:focus-visible { outline: 2px solid #e8a85c; outline-offset: 2px; }"
+    },
+    {
+      "name": "District Chip",
+      "kind": "chip",
+      "refersTo": "button-rail",
+      "description": "District name with its own data-supplied colour as a dot; active adds a tint.",
+      "html": "<div class=\"ds-rail\"><button class=\"ds-district is-active\" style=\"--district-color:#8fbf6a\">Village</button><button class=\"ds-district\" style=\"--district-color:#e0876a\">Market Lane</button></div>",
+      "css": ".ds-rail { display: inline-flex; gap: 4px; padding: 5px; background: rgb(14 23 20 / 0.9); border-radius: 13px; box-shadow: 0 12px 32px -10px rgb(0 0 0 / 0.55), 0 2px 6px rgb(0 0 0 / 0.35); } .ds-district { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 6px 9px; font: 550 0.8125rem/1.2 system-ui, sans-serif; color: #b9c9c0; background: transparent; border: 1px solid transparent; border-radius: 10px; cursor: pointer; transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1); } .ds-district::before { content: \"\"; width: 8px; height: 8px; border-radius: 50%; background: var(--district-color, #7fd3a8); } .ds-district:hover { color: #e7efea; } .ds-district:active { transform: scale(0.97); } .ds-district.is-active { color: #e7efea; background: color-mix(in srgb, var(--district-color) 24%, transparent); border-color: color-mix(in srgb, var(--district-color) 45%, transparent); } .ds-district:focus-visible { outline: 2px solid #e8a85c; outline-offset: 2px; }"
+    },
+    {
+      "name": "Status Chips",
+      "kind": "chip",
+      "refersTo": "status-chip",
+      "description": "Request state pills; mint verified, caution blocked, coral failed.",
+      "html": "<span class=\"ds-status\">In progress</span> <span class=\"ds-status is-done\">Completed</span> <span class=\"ds-status is-blocked\">Blocked</span> <span class=\"ds-status is-failed\">Failed</span>",
+      "css": ".ds-status { display: inline-block; padding: 3px 9px; border-radius: 999px; font: 650 0.6875rem/1.2 system-ui, sans-serif; letter-spacing: 0.04em; color: #b9c9c0; background: #1f2e29; } .ds-status.is-done { color: #0c2219; background: #7fd3a8; } .ds-status.is-blocked { color: #2a1f05; background: #e9c46a; } .ds-status.is-failed { color: #2b0d06; background: #f08f78; }"
+    },
+    {
+      "name": "Task Card",
+      "kind": "card",
+      "refersTo": "task-card",
+      "description": "An active request: who, status, title, and step stations lit mint when verified.",
+      "html": "<article class=\"ds-task\"><div class=\"ds-task-top\"><span>Elena</span><span class=\"ds-task-status\">Completed</span></div><h3>Water my garden bed</h3><div class=\"ds-steps\"><span class=\"ds-step is-done\"></span><span class=\"ds-step is-done\"></span><span class=\"ds-step\"></span></div><small>Verified by world events.</small></article>",
+      "css": ".ds-task { display: flex; flex-direction: column; gap: 6px; max-width: 320px; padding: 14px; background: #182521; border: 1px solid #23332e; border-radius: 12px; font-family: system-ui, sans-serif; } .ds-task-top { display: flex; justify-content: space-between; align-items: center; font-size: 0.8125rem; color: #b9c9c0; } .ds-task-status { padding: 3px 9px; border-radius: 999px; font-size: 0.6875rem; font-weight: 650; color: #0c2219; background: #7fd3a8; } .ds-task h3 { margin: 2px 0; font-size: 0.875rem; font-weight: 550; color: #e7efea; } .ds-steps { display: flex; gap: 4px; } .ds-step { flex: 1; height: 6px; border-radius: 6px; background: #30463f; } .ds-step.is-done { background: #7fd3a8; } .ds-task small { font-size: 0.75rem; color: #a1b4aa; }"
+    },
+    {
+      "name": "Resident Portrait",
+      "kind": "custom",
+      "refersTo": "sidecar",
+      "description": "Lit portrait plate: amber light pool, Georgia name, sans role and status.",
+      "html": "<div class=\"ds-profile\"><div class=\"ds-portrait\"></div><div><h2>Maya</h2><div class=\"ds-role\">Cafe owner</div><p>Taking a break</p></div></div>",
+      "css": ".ds-profile { display: flex; align-items: flex-end; gap: 12px; min-height: 124px; padding: 10px 14px 12px 6px; border-radius: 16px; background: radial-gradient(ellipse 55% 70% at 22% 85%, rgb(232 168 92 / 0.22), transparent 70%), #182521; font-family: system-ui, sans-serif; } .ds-portrait { width: 86px; height: 100px; flex: none; } .ds-profile h2 { margin: 0; font: 400 1.875rem/1.05 Georgia, serif; letter-spacing: -0.01em; color: #e7efea; } .ds-role { font-size: 0.8125rem; color: #a1b4aa; margin-top: 2px; } .ds-profile p { margin: 6px 0 0; font-size: 0.8125rem; color: #b9c9c0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Lit Diorama",
+    "overview": "The town is the only light source. Everything around it is evening darkness in a dusk-green register, and the isometric town sits on a rounded stage like a lamplit diorama on a dark shelf: a radial pool of light at its centre, a vignette that lets its edges fall away. The chrome never competes with it. Panels are barely-lifted shades of the same dark, text is cool and quiet, and colour is spent almost entirely on light: warm lantern amber for the clock, the one action you should take next, and the selected resident; cool mint for anything verified, live, or healthy.\n\nDensity is operational rather than decorative. The page is a working instrument for watching agents: one fluid world column (heading, stage, footer), a fixed resident sidecar beside it, and the depth (requests, community, event log, tools) waiting underneath without competing. Figures are tabular, data sits in a mono face, and the two moments of personality in type are the Georgia clock and the Georgia resident name, the two things in the interface that are about time and people.\n\nMotion is sparse and physical. The page has one signature moment, the stage lighting up once the artwork has loaded; after that, values snap and leave a short afterglow instead of tweening, buttons compress under the press, and hover exists only for fine pointers. Rejected by the chosen direction: the pale dashboard with the game shrunk to one tile among many.",
+    "keyCharacteristics": [
+      "Dusk-green darkness around a single lit stage; the stage is the brightest thing on the page.",
+      "Amber is light, not ink: fills, text, rings, and radial pools, never a stroke on chrome.",
+      "Mint is reserved for verified, live, and healthy states.",
+      "System sans for the interface; Georgia only for the clock and resident names; mono only for data.",
+      "Resting surfaces are flat and bordered; only floating surfaces cast shadows.",
+      "One lighting-up moment on load, then snap-and-afterglow."
+    ],
+    "rules": [
+      { "name": "The Single Light Rule", "body": "Amber is the only warm light in the chrome and there is one amber action per region. If two amber fills compete in the same panel, one of them is wrong.", "section": "colors" },
+      { "name": "The Mint Means Proven Rule", "body": "Mint appears only where the world has confirmed something: a completed step, a live connection, a healthy need. It is never decoration.", "section": "colors" },
+      { "name": "The District Hue Rule", "body": "District colours come from layout data (set per chip as `--district-color`) and appear only as an 8px dot, or as a 24% tint with a 45% edge when the district is active. They are never hard-coded into the stylesheet.", "section": "colors" },
+      { "name": "The Two Serifs Rule", "body": "Georgia is used in exactly two places: the clock and the resident's name. Headings, buttons, and labels stay in the system sans.", "section": "typography" },
+      { "name": "The Mono Is Data Rule", "body": "Cascadia Mono marks machine values (timestamps, scores, JSON). Human prose never goes mono, and running counts use tabular figures in the sans instead.", "section": "typography" },
+      { "name": "The World First Rule", "body": "The stage owns the first viewport at every width; depth content always starts below it, never beside it.", "section": "layout" },
+      { "name": "The Rest Or Float Rule", "body": "A resting surface has a 1px border and no shadow; a floating surface has a shadow and no border. Never both.", "section": "elevation" },
+      { "name": "The Clear Glass Rule", "body": "Glass over the live canvas is a 90% opaque dusk fill (rgb(14 23 20 / 0.9)), never a backdrop blur; the town under it keeps moving and stays sharp.", "section": "elevation" }
+    ],
+    "dos": [
+      "**Do** keep the stage the brightest thing on screen; chrome steps only from ink (#0b1311) to raise-2 (#1f2e29).",
+      "**Do** spend amber on light: one primary fill per region, the clock, timestamps, the active underline, focus, and the selected ring.",
+      "**Do** reserve mint for states the world has verified (completed steps, live connection, need levels).",
+      "**Do** give resting surfaces a 1px hairline and no shadow, and floating surfaces the float shadow and no border.",
+      "**Do** animate only transform and opacity, on the ease-out curve (cubic-bezier(0.23, 1, 0.32, 1)); gate hover behind (hover: hover) and (pointer: fine).",
+      "**Do** keep reduced-motion users' state legible: keep opacity changes, drop scale and translation.",
+      "**Do** grow every control to 44px on coarse pointers.",
+      "**Do** let district hues come from data, as dots and tints only."
+    ],
+    "donts": [
+      "**Don't** use Georgia anywhere except the clock and the resident name.",
+      "**Don't** set prose, headings, or buttons in mono; mono is for timestamps, metadata, and JSON.",
+      "**Don't** use amber as a border or divider colour on chrome; amber is light, not a line.",
+      "**Don't** put coloured box-shadow halos on chrome; the only coloured glows are the radial light pools of the stage, the portrait, and the request afterglow.",
+      "**Don't** blur what sits over the live canvas; glass is an opaque dusk fill.",
+      "**Don't** add eyebrow kickers or tracked uppercase labels above headings; uppercase tracking is kept for the connection-status pill and memory kind labels.",
+      "**Don't** tween changing numbers or colours; snap them and let the afterglow mark the change.",
+      "**Don't** shrink the town into one tile among many dashboard panels."
+    ]
+  }
+}
