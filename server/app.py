@@ -3,6 +3,7 @@ import argparse
 import json
 import mimetypes
 import os
+import socket
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -23,6 +24,10 @@ def load_environment():
                     os.environ.setdefault(name.strip(), value.strip().strip("\"'"))
 
 
+MAX_STREAMS = 8
+SOCKET_TIMEOUT = 15
+
+
 class SimulationHTTPServer(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = True
@@ -31,16 +36,24 @@ class SimulationHTTPServer(ThreadingHTTPServer):
         super().__init__(address, Handler)
         self.world = world
         self.stopping = threading.Event()
+        self.stream_slots = threading.BoundedSemaphore(MAX_STREAMS)
 
 
 class Handler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
+    # Applies to reads of stalled request bodies and writes to stalled stream readers.
+    timeout = SOCKET_TIMEOUT
 
     def log_message(self, *args):
         pass
 
     def allowed_host(self):
         return urlsplit("http://" + self.headers.get("Host", "")).hostname in ("127.0.0.1", "localhost")
+
+    def same_origin(self):
+        # A same-origin EventSource or fetch GET may omit Origin, so absence is allowed.
+        origin = self.headers.get("Origin")
+        return not origin or urlsplit(origin).netloc == self.headers.get("Host")
 
     def send_json(self, value, code=200):
         raw = json.dumps(value, ensure_ascii=False).encode("utf-8")
@@ -79,18 +92,26 @@ class Handler(BaseHTTPRequestHandler):
             except CommandError as exc:
                 self.send_json({"error": str(exc)}, 404)
         elif path == "/api/stream":
-            self.send_response(200)
-            self.send_header("Content-Type", "text/event-stream")
-            self.send_header("Cache-Control", "no-cache")
-            self.send_header("Connection", "close")
-            self.end_headers()
+            if not self.same_origin():
+                self.send_json({"error": "Same-origin local streams only"}, 403)
+                return
+            if not self.server.stream_slots.acquire(blocking=False):
+                self.send_json({"error": "Too many open streams"}, 503)
+                return
             try:
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream")
+                self.send_header("Cache-Control", "no-cache")
+                self.send_header("Connection", "close")
+                self.end_headers()
                 while not self.server.stopping.is_set():
                     self.wfile.write(("data: " + json.dumps(self.server.world.snapshot()) + "\n\n").encode())
                     self.wfile.flush()
                     self.server.stopping.wait(.2)
-            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, socket.timeout):
                 pass
+            finally:
+                self.server.stream_slots.release()
             self.close_connection = True
         else:
             # Deliberate allowlist: never serve .env, SQLite, source config or arbitrary workspace files.
@@ -144,6 +165,10 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"ok":True,"layout":layout})
             else:
                 self.send_json(self.server.world.command(data))
+        except socket.timeout:
+            # The body is incomplete, so the connection cannot be reused; no command was applied.
+            self.close_connection = True
+            self.send_json({"error": "Request timed out"}, 408)
         except (ValueError, UnicodeDecodeError) as exc:
             self.send_json({"error": str(exc)[:250]}, 400)
 

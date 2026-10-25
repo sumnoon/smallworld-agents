@@ -1,4 +1,6 @@
 import json
+import http.client
+import socket
 import tempfile
 import threading
 import time
@@ -9,7 +11,7 @@ from concurrent.futures import Future
 from pathlib import Path
 from unittest.mock import patch
 
-from server.app import SimulationHTTPServer
+from server.app import SimulationHTTPServer, Handler
 from server.model import Cognition, ModelError, CHAT_SCHEMA
 from server.world import World, CommandError, distance
 
@@ -384,6 +386,54 @@ class HTTPTests(unittest.TestCase):
         self.assertEqual(caught.exception.code, 403)
         caught.exception.close()
         self.assertFalse(self.world.paused)
+
+    def open_stream(self, **headers):
+        conn = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=3)
+        conn.request("GET", "/api/stream", headers=headers)
+        return conn, conn.getresponse()
+
+    def test_stream_rejects_foreign_origin_and_allows_same_or_missing_origin(self):
+        conn, response = self.open_stream(Origin="https://example.com")
+        self.assertEqual(response.status, 403)
+        response.read()
+        conn.close()
+        for headers in ({}, {"Origin": self.base}):
+            conn, response = self.open_stream(**headers)
+            self.assertEqual(response.status, 200)
+            self.assertTrue(response.read(6).startswith(b"data:"))
+            conn.close()
+
+    def test_stream_limit_rejects_extra_clients_and_frees_slot_on_disconnect(self):
+        self.server.stream_slots = threading.BoundedSemaphore(1)
+        first, response = self.open_stream()
+        self.assertEqual(response.status, 200)
+        response.read(6)
+        extra, rejected = self.open_stream()
+        self.assertEqual(rejected.status, 503)
+        rejected.read()
+        extra.close()
+        first.close()
+        deadline = time.monotonic() + 5
+        status = 503
+        while status == 503 and time.monotonic() < deadline:
+            again, response = self.open_stream()
+            status = response.status
+            response.read(6) if status == 200 else response.read()
+            again.close()
+            time.sleep(.1)
+        self.assertEqual(status, 200)
+
+    def test_stalled_post_body_times_out_without_applying_command(self):
+        with patch.object(Handler, "timeout", .3):
+            with socket.create_connection(("127.0.0.1", self.server.server_port), timeout=3) as sock:
+                sock.sendall(b"POST /api/command HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Type: application/json\r\nContent-Length: 60\r\n\r\n"
+                             b'{"id":"slow","kind":"pause",')
+                reply = b""
+                while chunk := sock.recv(4096):
+                    reply += chunk
+        self.assertTrue(reply.startswith(b"HTTP/1.1 408"), reply[:40])
+        self.assertFalse(self.world.paused)
+        self.assertIsNone(self.world.storage.command_result("slow"))
 
 
 if __name__ == "__main__":
